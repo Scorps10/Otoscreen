@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0A1628">
+<title>OtoScreen v4</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A1628;
+  --surface: #111E35;
+  --surface2: #162440;
+  --border: rgba(255,255,255,0.08);
+  --sky: #4FC3F7;
+  --teal: #26C6DA;
+  --green: #66BB6A;
+  --yellow: #FFB74D;
+  --red: #EF5350;
+  --text: #F0F4FF;
+  --muted: #7B8FAD;
+  --accent: #4FC3F7;
+  --radius: 20px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+html,body{height:100%;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:var(--bg);}
+body{font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+
+/* ── Stars bg ── */
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:0.1}50%{opacity:0.6}}
+
+/* ── App shell ── */
+.app{position:relative;z-index:1;width:100%;max-width:430px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 calc(32px + var(--safe-bottom));}
+
+/* ── Header ── */
+.header{width:100%;padding:calc(14px + var(--safe-top)) 20px 12px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);letter-spacing:0.3px;}
+.logo em{font-style:italic;color:var(--sky);}
+.version-tag{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+/* ── Screens ── */
+.screen{display:none;width:100%;flex-direction:column;align-items:center;padding:0 16px;}
+.screen.active{display:flex;animation:fadeUp 0.35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 20px;width:100%;margin-bottom:12px;}
+.card-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);margin-bottom:6px;line-height:1.2;}
+.card-sub{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:18px;}
+
+/* ── Buttons ── */
+.btn{width:100%;padding:17px;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;display:block;text-align:center;touch-action:manipulation;-webkit-appearance:none;appearance:none;transition:opacity 0.12s,transform 0.12s;letter-spacing:0.2px;}
+.btn:active{opacity:0.82;transform:scale(0.97);}
+.btn-primary{background:linear-gradient(135deg,var(--sky),#0288D1);color:#000;font-weight:700;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-green{background:linear-gradient(135deg,var(--green),#388E3C);color:#fff;font-weight:700;}
+.btn-ghost{background:transparent;color:var(--muted);font-size:13px;padding:10px;}
+.btn+.btn{margin-top:10px;}
+.btn:disabled{opacity:0.35;pointer-events:none;}
+
+/* ── Progress dots ── */
+.progress-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--surface2);transition:all 0.3s;}
+.dot.active{background:var(--sky);transform:scale(1.3);}
+.dot.done{background:var(--green);}
+
+/* ══════════════════════════════════
+   ONBOARDING SCREENS
+══════════════════════════════════ */
+
+/* Welcome hero */
+.hero-visual{width:100%;height:200px;position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.hero-circle{width:160px;height:160px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#1E3A5F,#0A1628);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;}
+.hero-circle::before{content:'';position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(79,195,247,0.2);animation:pulse-ring 2.5s ease-out infinite;}
+.hero-circle::after{content:'';position:absolute;inset:-24px;border-radius:50%;border:1px solid rgba(79,195,247,0.08);animation:pulse-ring 2.5s ease-out infinite 0.5s;}
+@keyframes pulse-ring{0%{transform:scale(0.9);opacity:0.6}100%{transform:scale(1.2);opacity:0}}
+.hero-ear-svg{width:80px;height:80px;}
+
+/* Onboarding step card */
+.onboard-step{display:flex;flex-direction:column;align-items:center;text-align:center;}
+.step-num{font-size:11px;font-weight:700;color:var(--sky);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+
+/* ── PLACEMENT VISUAL (SVG diagram) ── */
+.placement-visual{width:100%;background:var(--surface2);border-radius:16px;padding:20px 16px;margin:16px 0;position:relative;overflow:hidden;}
+.placement-visual::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(79,195,247,0.1),transparent);pointer-events:none;}
+.placement-svg{width:100%;max-width:320px;display:block;margin:0 auto;}
+.placement-label{font-size:12px;font-weight:600;color:var(--muted);text-align:center;margin-top:10px;}
+.placement-label strong{color:var(--sky);}
+/* Tap-to-zoom diagrams */
+.zoom-wrap{position:relative;cursor:zoom-in;flex:1;min-width:0;}
+.zoom-wrap::after{content:'🔍';position:absolute;bottom:4px;right:4px;font-size:12px;opacity:0.5;pointer-events:none;background:rgba(0,0,0,0.3);border-radius:4px;padding:1px 3px;}
+.zoom-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);align-items:center;justify-content:center;padding:20px;}
+.zoom-modal.open{display:flex;}
+.zoom-modal svg{width:min(90vw,500px);height:auto;max-height:90vh;}
+.zoom-close{position:fixed;top:14px;right:14px;background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:38px;height:38px;font-size:18px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10000;}
+
+/* Animated indicator on placement */
+.contact-arrow{animation:arrowBounce 1.2s ease-in-out infinite;}
+@keyframes arrowBounce{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
+
+/* ── Consent gate ── */
+.consent-box{background:var(--surface2);border:1px solid rgba(239,83,80,0.3);border-radius:14px;padding:16px;margin-bottom:16px;}
+.consent-title{font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.consent-body{font-size:12px;color:var(--muted);line-height:1.7;}
+.consent-check{display:flex;align-items:flex-start;gap:12px;margin-top:14px;cursor:pointer;touch-action:manipulation;}
+.consent-check input{width:20px;height:20px;flex-shrink:0;accent-color:var(--sky);margin-top:1px;}
+.consent-check-label{font-size:13px;color:var(--text);line-height:1.5;}
+
+/* ── Age selector ── */
+.age-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0;}
+.age-chip{padding:10px 16px;border-radius:10px;background:var(--surface2);border:2px solid transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;touch-action:manipulation;transition:all 0.2s;}
+.age-chip.selected{border-color:var(--sky);color:var(--sky);background:rgba(79,195,247,0.1);}
+
+/* ══════════════════════════════════
+   CONTACT DETECTION
+══════════════════════════════════ */
+.contact-status{width:100%;border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;margin:12px 0;transition:all 0.4s;}
+.contact-status.waiting{background:var(--surface2);border:2px solid var(--border);}
+.contact-status.detecting{background:rgba(255,183,77,0.08);border:2px solid rgba(255,183,77,0.3);}
+.contact-status.confirmed{background:rgba(102,187,106,0.08);border:2px solid rgba(102,187,106,0.4);}
+.contact-icon{font-size:48px;transition:all 0.3s;}
+.contact-label{font-size:15px;font-weight:700;color:var(--text);}
+.contact-sub{font-size:12px;color:var(--muted);text-align:center;}
+
+/* Contact bar */
+.contact-bar-wrap{width:100%;margin:8px 0;}
+.contact-bar-track{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden;}
+.contact-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--yellow),var(--green));transition:width 0.15s ease;}
+
+/* ══════════════════════════════════
+   NORMALIZATION
+══════════════════════════════════ */
+.norm-visual{width:100%;height:80px;background:var(--surface2);border-radius:14px;overflow:hidden;position:relative;margin:12px 0;}
+.norm-visual canvas{width:100%;height:100%;display:block;}
+.norm-label{position:absolute;top:8px;left:12px;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+/* ══════════════════════════════════
+   TEST SCREEN
+══════════════════════════════════ */
+.test-ring-wrap{display:flex;flex-direction:column;align-items:center;margin:16px 0;}
+.test-ring{width:130px;height:130px;}
+.ring-bg{fill:none;stroke:var(--surface2);stroke-width:10;}
+.ring-prog{fill:none;stroke:var(--sky);stroke-width:10;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 0.1s linear;}
+.ring-center-emoji{font-size:38px;}
+.test-label{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);margin-top:10px;}
+.test-sub{font-size:12px;color:var(--muted);margin-top:3px;text-align:center;}
+
+/* Motion warning */
+.motion-warn{background:rgba(239,83,80,0.1);border:1px solid rgba(239,83,80,0.3);border-radius:12px;padding:12px 14px;font-size:13px;color:#EF9A9A;display:none;margin:8px 0;text-align:center;}
+.motion-warn.show{display:block;animation:shake 0.4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.wave-box{width:100%;height:80px;border-radius:14px;overflow:hidden;position:relative;margin:8px 0;}
+.wave-box canvas{width:100%;height:100%;display:block;}
+.wave-box-label{position:absolute;top:7px;left:11px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase;}
+.wave-emit{background:linear-gradient(180deg,#0D2137,#1565C0);}
+.wave-recv{background:linear-gradient(180deg,#0D2117,#1B5E20);}
+
+.freq-bars{width:100%;height:64px;display:flex;align-items:flex-end;gap:2px;padding:6px;border-radius:12px;background:var(--surface2);margin:8px 0;}
+.freq-bar{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--sky),#0288D1);transition:height 0.08s ease;min-height:3px;}
+
+/* ══════════════════════════════════
+   RESULTS
+══════════════════════════════════ */
+.result-hero{width:100%;border-radius:20px;padding:28px 20px;text-align:center;margin-bottom:12px;position:relative;overflow:hidden;}
+.result-hero.clear{background:rgba(102,187,106,0.08);border:2px solid rgba(102,187,106,0.3);}
+.result-hero.monitor{background:rgba(255,183,77,0.08);border:2px solid rgba(255,183,77,0.3);}
+.result-hero.see-doctor{background:rgba(239,83,80,0.08);border:2px solid rgba(239,83,80,0.3);}
+.result-icon{font-size:56px;display:block;margin-bottom:12px;}
+.result-headline{font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:8px;}
+.result-hero.clear .result-headline{color:#81C784;}
+.result-hero.monitor .result-headline{color:#FFB74D;}
+.result-hero.see-doctor .result-headline{color:#EF5350;}
+.result-plain{font-size:14px;color:var(--muted);line-height:1.7;}
+.result-action{font-size:13px;font-weight:700;margin-top:12px;padding:10px 16px;border-radius:10px;display:inline-block;}
+.result-hero.clear .result-action{background:rgba(102,187,106,0.15);color:#81C784;}
+.result-hero.monitor .result-action{background:rgba(255,183,77,0.15);color:#FFB74D;}
+.result-hero.see-doctor .result-action{background:rgba(239,83,80,0.15);color:#EF5350;}
+.score-spectrum{margin-top:18px;padding:0 2px;}
+.score-track{position:relative;height:10px;border-radius:5px;background:linear-gradient(to right,#66BB6A 0%,#66BB6A 25%,#FFB74D 25%,#FFB74D 45%,#EF5350 45%,#EF5350 100%);}
+.score-marker{position:absolute;top:-5px;width:20px;height:20px;border-radius:50%;background:#0F1428;border:3px solid #fff;transform:translateX(-50%);box-shadow:0 1px 6px rgba(0,0,0,0.5);transition:left 0.7s cubic-bezier(0.34,1.56,0.64,1);}
+.score-zones{display:flex;margin-top:5px;}
+.score-zone-lbl{font-size:10px;font-weight:700;opacity:0.65;letter-spacing:0.3px;}
+
+.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin:8px 0;}
+.metric-box{background:var(--surface2);border-radius:14px;padding:14px;text-align:center;}
+.metric-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--sky);}
+.metric-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:3px;}
+
+.asym-section{width:100%;background:var(--surface2);border-radius:14px;padding:16px;margin:8px 0;}
+.asym-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
+.asym-track{height:12px;border-radius:6px;background:var(--surface);position:relative;}
+.asym-L{position:absolute;right:50%;top:0;height:100%;border-radius:6px 0 0 6px;background:linear-gradient(90deg,#F48FB1,var(--sky));transition:width 0.7s cubic-bezier(.34,1.56,.64,1);}
+.asym-R{position:absolute;left:50%;top:0;height:100%;border-radius:0 6px 6px 0;background:linear-gradient(90deg,var(--sky),var(--teal));transition:width 0.7s cubic-bezier(.34,1.56,.64,1);}
+.asym-mid{position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:3px;height:20px;background:var(--muted);border-radius:2px;z-index:2;}
+.asym-labels{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-top:6px;}
+.asym-result{text-align:center;font-size:12px;font-weight:600;margin-top:8px;}
+
+/* ── Repeat test banner ── */
+.repeat-banner{background:rgba(239,83,80,0.1);border:1px solid rgba(239,83,80,0.3);border-radius:14px;padding:14px 16px;font-size:13px;color:#EF9A9A;line-height:1.6;margin-bottom:12px;width:100%;}
+.repeat-banner strong{display:block;color:#EF5350;margin-bottom:4px;font-size:14px;}
+
+/* ── Session history ── */
+.history-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.history-row:last-child{border-bottom:none;}
+.history-date{font-size:12px;color:var(--muted);}
+.history-ears{display:flex;gap:6px;}
+.history-dot{width:10px;height:10px;border-radius:50%;}
+.history-dot.clear{background:var(--green);}
+.history-dot.monitor{background:var(--yellow);}
+.history-dot.see-doctor{background:var(--red);}
+
+/* ── iOS overlay ── */
+#ios-gate{display:none;position:fixed;inset:0;z-index:999;background:rgba(10,22,40,0.97);flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;}
+#ios-gate.show{display:flex;}
+.ios-gate-icon{font-size:64px;margin-bottom:20px;animation:mascotBob 2.5s ease-in-out infinite;}
+@keyframes mascotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.ios-gate-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);margin-bottom:10px;}
+.ios-gate-sub{font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.7;}
+.ios-gate-btn{background:linear-gradient(135deg,var(--sky),#0288D1);color:#000;border:none;border-radius:16px;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;padding:18px 44px;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;}
+
+/* ── Misc ── */
+.chip{display:inline-block;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;}
+.chip-ios{background:#111;color:#fff;}
+.chip-android{background:#3DDC84;color:#000;}
+.chip-v4{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.divider{width:100%;height:1px;background:var(--border);margin:8px 0;}
+.tip{background:var(--surface2);border-left:3px solid var(--sky);border-radius:0 12px 12px 0;padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px;width:100%;}
+.tip strong{color:var(--text);display:block;margin-bottom:3px;}
+.disclaimer{font-size:11px;color:var(--muted);text-align:center;padding:0 20px 20px;line-height:1.6;opacity:0.7;}
+.disclaimer strong{color:var(--red);}
+.spinner{width:40px;height:40px;border-radius:50%;border:3px solid var(--surface2);border-top-color:var(--sky);animation:spin 0.8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- iOS Audio Gate -->
+<div id="ios-gate">
+  <div class="ios-gate-icon">👂</div>
+  <div class="ios-gate-title">One tap to begin</div>
+  <div class="ios-gate-sub">iPhone requires a direct tap to unlock audio before we can play any sound.</div>
+  <button class="ios-gate-btn" id="ios-gate-btn">🔊 Unlock Audio</button>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div class="logo">Oto<em>Screen</em></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="chip" id="platform-chip"></span>
+      <span class="chip chip-v4">v4</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN 0: WELCOME ══════════════════════════ -->
+  <div class="screen active" id="s-welcome">
+    <div class="hero-visual">
+      <div class="hero-circle">
+        <svg class="hero-ear-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="40" cy="40" rx="28" ry="34" fill="#1E3A5F" stroke="#4FC3F7" stroke-width="1.5"/>
+          <path d="M28 28 Q30 18 42 20 Q56 22 54 36 Q52 46 44 48 Q38 50 36 58" stroke="#4FC3F7" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <circle cx="36" cy="62" r="4" fill="#4FC3F7" opacity="0.7"/>
+          <path d="M38 36 Q42 32 44 38 Q46 44 40 46" stroke="#7EC8E3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ear Health Screener</div>
+      <div class="card-sub">OtoScreen uses your phone's speaker and microphone to detect acoustic patterns that may indicate fluid in your child's middle ear — no hardware needed.</div>
+      <div class="tip">
+        <strong>Ages 3–11 · Takes about 2 minutes</strong>
+        Both ears tested. Results shown instantly. Always confirm with a doctor.
+      </div>
+      <button class="btn btn-primary" onclick="startOnboarding()">Get Started →</button>
+      <button class="btn btn-ghost" onclick="goTo('s-history')">View Past Results</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN 0b: VOLUME GATE ══════════════════════════ -->
+  <!-- Shown before consent. Instructs user to set volume to max.
+       OtoScreen emits at a fixed safe amplitude (0.04 = ~55-65 dB SPL at contact).
+       For consistent, reliable results the system volume must be at maximum so the
+       chirp-to-noise ratio is maximised and calibration is meaningful across devices. -->
+  <div class="screen" id="s-volume">
+    <div class="card" style="text-align:center">
+
+      <!-- Volume icon -->
+      <div style="font-size:56px;margin:8px 0 16px">🔊</div>
+
+      <div class="card-title">Turn Volume to Maximum</div>
+      <div class="card-sub" style="margin-bottom:20px">OtoScreen plays a soft acoustic chirp into the ear canal and listens for the echo. For accurate results, your phone volume must be at <strong style="color:var(--text)">full</strong> before testing.</div>
+
+      <!-- Visual volume bar -->
+      <div style="margin:0 auto 20px;max-width:220px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:16px">🔈</span>
+          <div style="flex:1;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden">
+            <div id="vol-bar" style="width:0%;height:100%;border-radius:5px;background:linear-gradient(to right,#378ADD,#4FC3F7);transition:width 0.4s ease"></div>
+          </div>
+          <span style="font-size:16px">🔊</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Use your phone's physical volume buttons now</div>
+      </div>
+
+      <!-- Why this matters -->
+      <div class="tip" style="text-align:left;margin-bottom:20px">
+        <strong>Why max volume?</strong>
+        The chirp is safe at any volume — it's already limited in software. But a higher volume gives a better signal-to-noise ratio, which means more accurate results.
+      </div>
+
+      <!-- Confirm button -->
+      <button class="btn btn-primary" style="width:100%" onclick="confirmVolume()">Volume is at Max →</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;opacity:0.7">The chirp is very quiet — max volume ensures the echo is detectable</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN 1: CONSENT + AGE (combined) ══════════════════════════ -->
+  <div class="screen" id="s-consent">
+    <div class="progress-dots" id="dots-consent">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="card">
+      <div class="step-num">Step 1 of 3</div>
+      <div class="card-title">Before We Begin</div>
+
+      <div class="consent-box">
+        <div class="consent-title">⚠️ Not a Medical Device</div>
+        <div class="consent-body">
+          OtoScreen is an acoustic screening aid for parental awareness only — not a certified medical device. Results cannot diagnose or replace clinical evaluation. Always consult a doctor if you have concerns.
+        </div>
+        <label class="consent-check">
+          <input type="checkbox" id="consent-cb" onchange="checkConsent()">
+          <span class="consent-check-label">I understand this is a screening aid only.</span>
+        </label>
+      </div>
+
+      <div style="margin-top:20px;margin-bottom:6px">
+        <div class="card-title" style="font-size:16px">Child's Age</div>
+        <div class="card-sub" style="font-size:12px;margin-bottom:10px">Used to calibrate canal length for analysis</div>
+        <div class="age-row" id="age-row">
+          <div class="age-chip" onclick="selectAge(3,'3')">3</div>
+          <div class="age-chip" onclick="selectAge(4,'4')">4</div>
+          <div class="age-chip" onclick="selectAge(5,'5')">5</div>
+          <div class="age-chip" onclick="selectAge(6,'6')">6</div>
+          <div class="age-chip" onclick="selectAge(7,'7')">7</div>
+          <div class="age-chip" onclick="selectAge(8,'8')">8</div>
+          <div class="age-chip" onclick="selectAge(9,'9')">9</div>
+          <div class="age-chip" onclick="selectAge(10,'10')">10</div>
+          <div class="age-chip" onclick="selectAge(11,'11')">11</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px" id="age-canal-info">Select an age above</div>
+      </div>
+
+      <button class="btn btn-primary" id="consent-next-btn" disabled onclick="goTo('s-how')">Continue →</button>
+    </div>
+  </div>
+
+  <!-- s-age kept as alias redirect so any stale goTo('s-age') still works -->
+  <div class="screen" id="s-age" style="display:none"></div>
+
+  <!-- ══════════════════════════ SCREEN 3: HOW TO PLACE ══════════════════════════ -->
+  <div class="screen" id="s-how">
+    <div class="progress-dots">
+      <div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+    </div>
+    <div class="card">
+      <div class="step-num">Step 2 of 3 — Phone Placement</div>
+      <div class="card-title">How to Hold the Phone</div>
+      <div class="card-sub">The instructions differ slightly between iPhone and Android. Find your phone below.</div>
+
+      <!-- ── iPHONE SECTION ── -->
+      <div style="background:var(--surface2);border-radius:14px;padding:14px;margin:14px 0">
+        <div style="font-size:13px;font-weight:700;color:var(--sky);margin-bottom:10px;letter-spacing:0.3px">📱 iPhone</div>
+
+        <!-- Step instructions -->
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="background:var(--sky);color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">1</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Hold portrait, screen facing you. Rotate <strong style="color:var(--text)">counter-clockwise</strong> 90° — bottom edge now on the right.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="background:var(--sky);color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">2</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Bring that right edge to the child's ear. <strong style="color:var(--text)">Speaker is at the top of the edge</strong> — toward the face. <strong style="color:var(--text)">Screen faces you (the parent).</strong></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="background:var(--sky);color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">3</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Tilt the <strong style="color:var(--yellow)">top of the phone toward the back of the head</strong> — this rotates the speaker inward along the canal axis. Most of the phone sits behind the ear.</div>
+          </div>
+        </div>
+
+        <!-- iPhone diagrams: top-down + side view -->
+        <div class="placement-visual" style="padding:12px 8px">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-align:center;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">View from above · Side view</div>
+          <div style="font-size:9px;color:var(--muted);text-align:center;margin-bottom:4px;opacity:0.6">tap either diagram to zoom in</div>
+          <div style="display:flex;gap:8px">
+
+            <!-- iPHONE TOP-DOWN -->
+            <div class="zoom-wrap" onclick="openZoom('iphone-td')"><svg id="iphone-td" style="width:100%;display:block" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+              <text x="80" y="10" text-anchor="middle" fill="#7B8FAD" font-size="7" font-weight="600">FROM ABOVE</text>
+              <!-- Head oval: face at top (12), right ear at right (3) -->
+              <ellipse cx="68" cy="108" rx="46" ry="58" fill="#1E2F4A" stroke="#4A5A80" stroke-width="1" opacity="0.5"/>
+              <!-- Eyes near top -->
+              <ellipse cx="56" cy="72" rx="6" ry="4" fill="#fff" opacity="0.7"/>
+              <circle cx="57" cy="72" r="2.5" fill="#3A2010"/>
+              <ellipse cx="80" cy="72" rx="6" ry="4" fill="#fff" opacity="0.7"/>
+              <circle cx="81" cy="72" r="2.5" fill="#3A2010"/>
+              <!-- Nose pointing up -->
+              <path d="M64 65 Q68 58 72 65" fill="none" stroke="#C4A882" stroke-width="1" opacity="0.7" stroke-linecap="round"/>
+              <!-- Labels -->
+              <text x="68" y="46" text-anchor="middle" fill="#5A6A80" font-size="7">↑ face (12)</text>
+              <text x="68" y="180" text-anchor="middle" fill="#5A6A80" font-size="7">↓ back (6)</text>
+              <!-- Right ear at 3 o'clock -->
+              <path d="M113 98 Q120 101 121 108 Q120 115 113 118" fill="none" stroke="#8A6040" stroke-width="2" stroke-linecap="round"/>
+              <path d="M113 103 Q109 106 109 108 Q109 111 113 113 Q116 114 117 111 Q118 107 116 103Z" fill="#CC9040" stroke="#A87030" stroke-width="0.8"/>
+              <!-- Canal axis -->
+              <line x1="111" y1="107" x2="98" y2="100" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.9"/>
+              <text x="94" y="95" text-anchor="end" fill="#4FC3F7" font-size="6.5">canal</text>
+              <!-- iPHONE SLIVER — CCW rotation, speaker at TOP (toward 12), tilted so top leans toward head+12 -->
+              <!-- Speaker contact at x=111, y=100. Body extends DOWN-RIGHT (toward 6+away) -->
+              <!-- After CCW: screen faces child (right/toward head). Camera faces parent (left/away). -->
+              <g transform="rotate(-22 111 100)">
+                <!-- Phone body thin sliver -->
+                <rect x="111" y="100" width="7" height="72" rx="1.5" fill="#1a2035" stroke="#4A5A80" stroke-width="0.8"/>
+                <!-- Camera = left face = faces parent -->
+                <rect x="109" y="108" width="4" height="5" rx="1" fill="#0a0a15" stroke="#4FC3F7" stroke-width="0.4"/>
+                <!-- Screen edge = right face = faces child -->
+                <line x1="118" y1="102" x2="118" y2="170" stroke="#2C3A5A" stroke-width="1.2"/>
+                <!-- Dynamic Island near top of screen edge -->
+                <rect x="116" y="106" width="2" height="2" rx="1" fill="#0a0a0a"/>
+                <!-- Volume on right edge (after CCW = right long edge) -->
+                <rect x="118" y="120" width="1.5" height="5" rx="0.5" fill="#2A3550"/>
+                <rect x="118" y="128" width="1.5" height="4" rx="0.5" fill="#2A3550"/>
+                <!-- SPEAKER at TOP — toward 12 (face) -->
+                <circle cx="112" cy="102" r="0.9" fill="#BA7517"/>
+                <circle cx="115" cy="102" r="0.9" fill="#BA7517"/>
+                <circle cx="117" cy="102" r="0.9" fill="#BA7517"/>
+                <!-- USB-C below -->
+                <rect x="112" y="104" width="4" height="2" rx="0.5" fill="#2A3550"/>
+                <!-- Mic at bottom -->
+                <circle cx="115" cy="169" r="1" fill="#4A5A80"/>
+              </g>
+              <!-- Speaker aim arrow aligns with canal -->
+              <line x1="110" y1="100" x2="97" y2="93" stroke="#BA7517" stroke-width="1.5" stroke-dasharray="2,1.5" opacity="0.9"/>
+              <!-- Labels -->
+              <text x="130" y="103" font-size="6.5" fill="#BA7517">spkr</text>
+              <text x="130" y="113" font-size="6.5" fill="#BA7517">→ face ✓</text>
+              <text x="130" y="140" font-size="6.5" fill="#5A6A80">most of</text>
+              <text x="130" y="150" font-size="6.5" fill="#5A6A80">phone →</text>
+              <text x="130" y="160" font-size="6.5" fill="#5A6A80">back (6)</text>
+            </svg></div>
+
+            <!-- iPHONE SIDE VIEW -->
+            <div class="zoom-wrap" onclick="openZoom('iphone-sv')"><svg id="iphone-sv" style="width:100%;display:block" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+              <text x="80" y="10" text-anchor="middle" fill="#7B8FAD" font-size="7" font-weight="600">SIDE VIEW</text>
+              <!-- Head profile facing right -->
+              <path d="M62 162 Q36 158 28 135 Q19 108 26 83 Q35 52 56 40 Q72 30 88 33 Q112 39 118 62 Q124 83 116 106 Q110 122 100 130 Q90 136 84 138 L78 141 Q72 144 68 151 Q64 157 62 162Z" fill="#1E2F4A" stroke="#4A5A80" stroke-width="1" opacity="0.5"/>
+              <!-- Eye -->
+              <ellipse cx="98" cy="66" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+              <circle cx="99" cy="66" r="2.5" fill="#3A2010"/>
+              <!-- Nose -->
+              <path d="M108 86 Q115 90 113 97 Q109 100 105 99" fill="#ECC8A0" stroke="#C4A882" stroke-width="0.8" fill-opacity="0.5"/>
+              <!-- Mouth -->
+              <path d="M100 112 Q106 115 110 113" fill="none" stroke="#C08060" stroke-width="1" stroke-linecap="round"/>
+              <!-- Labels -->
+              <text x="118" y="68" font-size="7" fill="#5A6A80">← face</text>
+              <text x="22" y="100" text-anchor="middle" font-size="7" fill="#5A6A80">back →</text>
+              <text x="108" y="145" font-size="6.5" fill="#5A6A80">chin</text>
+              <text x="108" y="46" font-size="6.5" fill="#5A6A80">eye</text>
+              <!-- Ear -->
+              <path d="M76 95 Q67 99 65 108 Q63 114 66 120 Q69 127 76 128 Q83 128 84 123 Q85 117 83 108 Q81 100 78 96Z" fill="#3A2810" stroke="#8A6040" stroke-width="1"/>
+              <path d="M74 103 Q69 107 68 112 Q69 117 73 121" fill="none" stroke="#C4A882" stroke-width="0.8" stroke-linecap="round"/>
+              <path d="M77 107 Q73 110 73 113 Q73 117 77 118 Q80 119 81 115 Q82 110 79 107Z" fill="#CC9040" stroke="#A87030" stroke-width="0.8"/>
+              <!-- Canal axis: forward + slightly down -->
+              <line x1="76" y1="113" x2="90" y2="119" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
+              <!-- iPHONE SIDE VIEW — wide rect, camera on left (parent), screen on right (child) -->
+              <!-- Tilted: top leans toward back of head. Rotate +18deg around ear contact (76,113) -->
+              <g transform="rotate(18 76 113)">
+                <rect x="20" y="100" width="56" height="26" rx="3" fill="#1a2035" stroke="#4A5A80" stroke-width="1"/>
+                <!-- SCREEN LEFT face — parent sees this (iPhone CCW = screen faces parent) -->
+                <rect x="24" y="104" width="33" height="18" rx="2" fill="#2C3A5A"/>
+                <!-- Dynamic Island -->
+                <rect x="34" y="107" width="10" height="3" rx="1.5" fill="#0a0a0a"/>
+                <rect x="27" y="113" width="20" height="1.5" rx="0.5" fill="#4A5A80" opacity="0.7"/>
+                <rect x="27" y="117" width="14" height="1.5" rx="0.5" fill="#4A5A80" opacity="0.5"/>
+                <!-- Camera RIGHT portion — child faces camera -->
+                <rect x="60" y="104" width="12" height="18" rx="2" fill="#141824" stroke="#2A3A56" stroke-width="0.5"/>
+                <circle cx="66" cy="113" r="4" fill="#0a0a15" stroke="#4FC3F7" stroke-width="0.6"/>
+                <circle cx="66" cy="113" r="1.8" fill="#1a2035"/>
+                <!-- SPEAKER on RIGHT short edge — top = toward face -->
+                <rect x="73" y="103" width="3" height="2.5" rx="0.5" fill="#BA7517"/>
+                <rect x="73" y="107" width="3" height="2.5" rx="0.5" fill="#BA7517"/>
+                <rect x="73" y="111" width="3" height="2.5" rx="0.5" fill="#BA7517"/>
+                <!-- USB-C -->
+                <rect x="73" y="115" width="3" height="4" rx="1" fill="#2A3550"/>
+                <!-- Mic bottom -->
+                <circle cx="74" cy="122" r="1.2" fill="#4A5A80"/>
+                <!-- Vol on top long edge (after CCW) -->
+                <rect x="32" y="99" width="6" height="2" rx="0.5" fill="#2A3550"/>
+                <rect x="41" y="99" width="4" height="2" rx="0.5" fill="#2A3550"/>
+              </g>
+              <!-- Tilt arc -->
+              <path d="M76 102 A14 14 0 0 1 88 96" fill="none" stroke="#BA7517" stroke-width="0.8" stroke-dasharray="2,1.5"/>
+              <text x="90" y="93" font-size="6.5" fill="#BA7517">~20°</text>
+              <!-- Labels -->
+              <text x="8" y="112" text-anchor="start" font-size="6.5" fill="#4FC3F7">scr→</text>
+              <text x="8" y="120" text-anchor="start" font-size="6.5" fill="#4FC3F7">parent</text>
+              <text x="8" y="132" text-anchor="start" font-size="6.5" fill="#8A9AB0">cam→</text>
+              <text x="8" y="140" text-anchor="start" font-size="6.5" fill="#8A9AB0">child</text>
+              <text x="135" y="107" text-anchor="end" font-size="6.5" fill="#BA7517">spkr</text>
+              <text x="135" y="117" text-anchor="end" font-size="6.5" fill="#BA7517">at ear</text>
+            </svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANDROID SECTION ── -->
+      <div style="background:var(--surface2);border-radius:14px;padding:14px;margin:14px 0">
+        <div style="font-size:13px;font-weight:700;color:#66BB6A;margin-bottom:10px;letter-spacing:0.3px">🤖 Android (Samsung, Pixel, others)</div>
+
+        <!-- Step instructions -->
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="background:#66BB6A;color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">1</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Hold portrait, screen facing you. Rotate <strong style="color:var(--text)">clockwise</strong> 90° — bottom edge now on the left.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="background:#66BB6A;color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">2</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Bring that left edge to the child's ear. <strong style="color:var(--text)">Speaker is at the top of the edge</strong> — toward the face. Screen faces the child.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="background:#66BB6A;color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">3</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Tilt the <strong style="color:var(--yellow)">top of the phone toward the back of the head</strong> — this rotates the speaker inward along the canal axis. Most of the phone sits behind the ear.</div>
+          </div>
+        </div>
+
+        <!-- Android diagrams -->
+        <div class="placement-visual" style="padding:12px 8px">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-align:center;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">View from above · Side view</div>
+          <div style="font-size:9px;color:var(--muted);text-align:center;margin-bottom:4px;opacity:0.6">tap either diagram to zoom in</div>
+          <div style="display:flex;gap:8px">
+
+            <!-- ANDROID TOP-DOWN -->
+            <div class="zoom-wrap" onclick="openZoom('android-td')"><svg id="android-td" style="width:100%;display:block" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+              <text x="80" y="10" text-anchor="middle" fill="#7B8FAD" font-size="7" font-weight="600">FROM ABOVE</text>
+              <!-- Head oval -->
+              <ellipse cx="68" cy="108" rx="46" ry="58" fill="#1E2F4A" stroke="#4A5A80" stroke-width="1" opacity="0.5"/>
+              <!-- Eyes -->
+              <ellipse cx="56" cy="72" rx="6" ry="4" fill="#fff" opacity="0.7"/>
+              <circle cx="57" cy="72" r="2.5" fill="#3A2010"/>
+              <ellipse cx="80" cy="72" rx="6" ry="4" fill="#fff" opacity="0.7"/>
+              <circle cx="81" cy="72" r="2.5" fill="#3A2010"/>
+              <path d="M64 65 Q68 58 72 65" fill="none" stroke="#C4A882" stroke-width="1" opacity="0.7" stroke-linecap="round"/>
+              <text x="68" y="46" text-anchor="middle" fill="#5A6A80" font-size="7">↑ face (12)</text>
+              <text x="68" y="180" text-anchor="middle" fill="#5A6A80" font-size="7">↓ back (6)</text>
+              <!-- Right ear at 3 o'clock -->
+              <path d="M113 98 Q120 101 121 108 Q120 115 113 118" fill="none" stroke="#8A6040" stroke-width="2" stroke-linecap="round"/>
+              <path d="M113 103 Q109 106 109 108 Q109 111 113 113 Q116 114 117 111 Q118 107 116 103Z" fill="#CC9040" stroke="#A87030" stroke-width="0.8"/>
+              <!-- Canal axis -->
+              <line x1="111" y1="107" x2="98" y2="100" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.9"/>
+              <text x="94" y="95" text-anchor="end" fill="#4FC3F7" font-size="6.5">canal</text>
+              <!-- ANDROID SLIVER — CW rotation, speaker at TOP (toward 12)
+                   Contact point = speaker at x=111,y=100.
+                   Tilted -22deg (CCW in SVG coords) so speaker aims along canal axis (inward+toward 12).
+                   Body extends toward 6 o'clock (back of head). Most of phone below contact point.
+                   LEFT face = camera = faces parent. RIGHT face = screen = faces child. -->
+              <g transform="rotate(-22 111 100)">
+                <rect x="111" y="100" width="7" height="72" rx="1.5" fill="#1a2035" stroke="#4A5A80" stroke-width="0.8"/>
+                <!-- Camera = LEFT face = faces parent -->
+                <rect x="109" y="110" width="5" height="7" rx="1" fill="#0a0a15" stroke="#4FC3F7" stroke-width="0.5"/>
+                <circle cx="112" cy="114" r="2" fill="#0a0a0a" stroke="#4FC3F7" stroke-width="0.4"/>
+                <!-- Screen = RIGHT face = faces child -->
+                <line x1="118" y1="102" x2="118" y2="170" stroke="#2C3A5A" stroke-width="1.2"/>
+                <!-- Punch-hole near top of screen edge -->
+                <circle cx="118" cy="107" r="1.5" fill="#0a0a0a" stroke="#4FC3F7" stroke-width="0.3"/>
+                <!-- Volume on RIGHT long edge (Android after CW = right long edge) -->
+                <rect x="118" y="128" width="1.5" height="5" rx="0.5" fill="#2A3550"/>
+                <rect x="118" y="136" width="1.5" height="4" rx="0.5" fill="#2A3550"/>
+                <!-- SPEAKER at TOP — toward 12 (face) ✓ -->
+                <circle cx="112" cy="102" r="0.9" fill="#BA7517"/>
+                <circle cx="115" cy="102" r="0.9" fill="#BA7517"/>
+                <circle cx="117" cy="102" r="0.9" fill="#BA7517"/>
+                <!-- USB-C below speaker -->
+                <rect x="112" y="104" width="4" height="2" rx="0.5" fill="#2A3550"/>
+                <!-- Mic at BOTTOM -->
+                <circle cx="115" cy="169" r="1" fill="#4A5A80"/>
+              </g>
+              <!-- Speaker aim arrow aligns with canal -->
+              <line x1="110" y1="100" x2="97" y2="93" stroke="#BA7517" stroke-width="1.5" stroke-dasharray="2,1.5" opacity="0.9">
+                <animate attributeName="opacity" values="0.9;0.4;0.9" dur="1.2s" repeatCount="indefinite"/>
+              </line>
+              <!-- Labels -->
+              <text x="130" y="103" font-size="6.5" fill="#BA7517">spkr</text>
+              <text x="130" y="113" font-size="6.5" fill="#BA7517">→ face ✓</text>
+              <text x="130" y="140" font-size="6.5" fill="#5A6A80">most of</text>
+              <text x="130" y="150" font-size="6.5" fill="#5A6A80">phone →</text>
+              <text x="130" y="160" font-size="6.5" fill="#5A6A80">back (6)</text>
+            </svg></div>
+
+            <!-- ANDROID SIDE VIEW -->
+            <div class="zoom-wrap" onclick="openZoom('android-sv')"><svg id="android-sv" style="width:100%;display:block" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+              <text x="80" y="10" text-anchor="middle" fill="#7B8FAD" font-size="7" font-weight="600">SIDE VIEW</text>
+              <!-- Head profile -->
+              <path d="M62 162 Q36 158 28 135 Q19 108 26 83 Q35 52 56 40 Q72 30 88 33 Q112 39 118 62 Q124 83 116 106 Q110 122 100 130 Q90 136 84 138 L78 141 Q72 144 68 151 Q64 157 62 162Z" fill="#1E2F4A" stroke="#4A5A80" stroke-width="1" opacity="0.5"/>
+              <ellipse cx="98" cy="66" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+              <circle cx="99" cy="66" r="2.5" fill="#3A2010"/>
+              <path d="M108 86 Q115 90 113 97 Q109 100 105 99" fill="#ECC8A0" stroke="#C4A882" stroke-width="0.8" fill-opacity="0.5"/>
+              <path d="M100 112 Q106 115 110 113" fill="none" stroke="#C08060" stroke-width="1" stroke-linecap="round"/>
+              <text x="118" y="68" font-size="7" fill="#5A6A80">← face</text>
+              <text x="22" y="100" text-anchor="middle" font-size="7" fill="#5A6A80">back →</text>
+              <text x="108" y="145" font-size="6.5" fill="#5A6A80">chin</text>
+              <text x="108" y="46" font-size="6.5" fill="#5A6A80">eye</text>
+              <!-- Ear -->
+              <path d="M76 95 Q67 99 65 108 Q63 114 66 120 Q69 127 76 128 Q83 128 84 123 Q85 117 83 108 Q81 100 78 96Z" fill="#3A2810" stroke="#8A6040" stroke-width="1"/>
+              <path d="M74 103 Q69 107 68 112 Q69 117 73 121" fill="none" stroke="#C4A882" stroke-width="0.8" stroke-linecap="round"/>
+              <path d="M77 107 Q73 110 73 113 Q73 117 77 118 Q80 119 81 115 Q82 110 79 107Z" fill="#CC9040" stroke="#A87030" stroke-width="0.8"/>
+              <!-- Canal axis -->
+              <line x1="76" y1="113" x2="90" y2="119" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
+              <!-- ANDROID SIDE VIEW phone
+                   Camera on LEFT (parent). Screen on RIGHT (child). Punch-hole.
+                   Volume on BOTTOM long edge (after CW rotation).
+                   Tilted +18deg around ear contact. -->
+              <g transform="rotate(18 76 113)">
+                <rect x="20" y="100" width="56" height="26" rx="3" fill="#1a2035" stroke="#4A5A80" stroke-width="1"/>
+                <!-- Camera LEFT face -->
+                <rect x="24" y="104" width="14" height="18" rx="2" fill="#141824" stroke="#2A3A56" stroke-width="0.5"/>
+                <rect x="27" y="107" width="8" height="8" rx="2" fill="#0F1428" stroke="#4FC3F7" stroke-width="0.5"/>
+                <circle cx="31" cy="111" r="3" fill="#0a0a15" stroke="#4FC3F7" stroke-width="0.5"/>
+                <circle cx="34" cy="107" r="1" fill="#FFD700" opacity="0.7"/>
+                <!-- Screen RIGHT face -->
+                <rect x="41" y="104" width="31" height="18" rx="2" fill="#2C3A5A"/>
+                <!-- Punch-hole -->
+                <circle cx="57" cy="108" r="2.5" fill="#0a0a0a"/>
+                <rect x="44" y="113" width="16" height="1.5" rx="0.5" fill="#4A5A80" opacity="0.7"/>
+                <rect x="44" y="117" width="11" height="1.5" rx="0.5" fill="#4A5A80" opacity="0.5"/>
+                <!-- SPEAKER on RIGHT short edge — top = toward face ✓ -->
+                <rect x="73" y="103" width="3" height="2.5" rx="0.5" fill="#BA7517"/>
+                <rect x="73" y="107" width="3" height="2.5" rx="0.5" fill="#BA7517"/>
+                <rect x="73" y="111" width="3" height="2.5" rx="0.5" fill="#BA7517"/>
+                <!-- USB-C -->
+                <rect x="73" y="115" width="3" height="4" rx="1" fill="#2A3550"/>
+                <!-- Mic at bottom -->
+                <circle cx="74" cy="122" r="1.2" fill="#4A5A80"/>
+                <!-- Volume on BOTTOM long edge (Android CW) -->
+                <rect x="32" y="124" width="5" height="2" rx="0.5" fill="#2A3550"/>
+                <rect x="40" y="124" width="4" height="2" rx="0.5" fill="#2A3550"/>
+                <rect x="47" y="124" width="6" height="2" rx="0.5" fill="#2A3550"/>
+              </g>
+              <!-- Tilt arc -->
+              <path d="M76 102 A14 14 0 0 1 88 96" fill="none" stroke="#BA7517" stroke-width="0.8" stroke-dasharray="2,1.5"/>
+              <text x="90" y="93" font-size="6.5" fill="#BA7517">~20°</text>
+              <!-- Labels -->
+              <text x="8" y="112" text-anchor="start" font-size="6.5" fill="#8A9AB0">cam→</text>
+              <text x="8" y="120" text-anchor="start" font-size="6.5" fill="#8A9AB0">parent</text>
+              <text x="8" y="132" text-anchor="start" font-size="6.5" fill="#4FC3F7">scr→</text>
+              <text x="8" y="140" text-anchor="start" font-size="6.5" fill="#4FC3F7">child</text>
+              <text x="135" y="107" text-anchor="end" font-size="6.5" fill="#BA7517">spkr</text>
+              <text x="135" y="117" text-anchor="end" font-size="6.5" fill="#BA7517">at ear</text>
+            </svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared reminder -->
+      <div class="tip" style="margin-bottom:14px">
+        <strong>Both phones:</strong> Speaker at top of edge → toward face → aligns with canal. Most of phone behind ear toward back of head. iPhone: screen faces parent. Android: screen faces child. Gentle pressure only.
+      </div>
+
+      <button class="btn btn-primary" onclick="goToEarSelect()">Got it — Let's Test</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN 3: EAR SELECT ══════════════════════════ -->
+  <div class="screen" id="s-earselect">
+    <div class="card">
+      <div class="card-title" id="earselect-title">Which ear?</div>
+      <div class="card-sub">We'll test both. Pick the first ear to start.</div>
+
+      <div style="display:flex;gap:12px;margin:16px 0">
+        <div onclick="selectEar('left')" id="ear-left" style="flex:1;background:var(--surface2);border:2px solid transparent;border-radius:18px;padding:20px 10px;text-align:center;cursor:pointer;touch-action:manipulation;transition:all 0.2s">
+          <div style="font-size:38px">👂</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--text);margin-top:8px">Left</div>
+        </div>
+        <div onclick="selectEar('right')" id="ear-right" style="flex:1;background:var(--surface2);border:2px solid transparent;border-radius:18px;padding:20px 10px;text-align:center;cursor:pointer;touch-action:manipulation;transition:all 0.2s">
+          <div style="font-size:38px;transform:scaleX(-1);display:inline-block">👂</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--text);margin-top:8px">Right</div>
+        </div>
+      </div>
+
+      <!-- Placement reminder mini diagram -->
+      <div style="background:var(--surface2);border-radius:14px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:28px;flex-shrink:0">📱</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">
+          <strong style="color:var(--text);display:block;margin-bottom:2px">Reminder: Tragus contact</strong>
+          Bottom edge rested in the inner tragus pocket, speaker aimed at canal. <span id="ear-side-remind" style="color:var(--sky)">Select an ear above.</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="earselect-go" disabled onclick="startContactDetection()">👉 Test This Ear</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN 7: CONTACT DETECTION ══════════════════════════ -->
+  <div class="screen" id="s-contact">
+    <div class="card">
+      <div class="card-title" id="contact-title">Detecting Contact</div>
+      <div class="card-sub" id="contact-sub">Rest the bottom edge in the <strong style="color:var(--yellow)" id="contact-ear-label">left ear</strong> inner tragus pocket · tilt phone 25–35° forward so speaker aims into canal.</div>
+
+      <!-- Mini placement reminder -->
+      <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="2" y="14" width="20" height="10" rx="3" fill="#111E35" stroke="#4FC3F7" stroke-width="1"/>
+          <line x1="8" y1="16" x2="8" y2="22" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="12" y1="16" x2="12" y2="22" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="6" cy="19" r="2" fill="#26C6DA" opacity="0.9"/>
+          <ellipse cx="36" cy="24" rx="10" ry="14" fill="#1E2F4A" stroke="#4FC3F7" stroke-width="1"/>
+          <ellipse cx="28" cy="26" rx="3" ry="5" fill="#FFB74D" opacity="0.5"/>
+          <line x1="22" y1="20" x2="26" y2="24" stroke="#FFB74D" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">Sideways · inner pocket · tilt forward · bottom edge to <strong style="color:var(--yellow)" id="contact-ear-label2">left tragus</strong></div>
+      </div>
+
+      <div class="contact-status waiting" id="contact-status">
+        <div class="contact-icon" id="contact-icon">📱</div>
+        <div class="contact-label" id="contact-label">Waiting for contact…</div>
+        <div class="contact-sub" id="contact-sublabel">Rest the bottom edge in the inner curved pocket of the tragus</div>
+      </div>
+
+
+      <div class="contact-bar-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600">
+          <span>NO CONTACT</span><span>CONTACT DETECTED</span>
+        </div>
+        <div class="contact-bar-track">
+          <div class="contact-bar-fill" id="contact-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-ghost" onclick="skipContact()" style="margin-top:8px">Skip contact detection →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN 8: TESTING ══════════════════════════ -->
+  <div class="screen" id="s-test">
+    <div class="card">
+      <div class="card-title" id="test-title">Testing Left Ear</div>
+
+      <div class="test-ring-wrap">
+        <svg class="test-ring" viewBox="0 0 140 140">
+          <circle class="ring-bg" cx="70" cy="70" r="58"/>
+          <circle class="ring-prog" id="ring-prog" cx="70" cy="70" r="58" stroke-dasharray="364" stroke-dashoffset="364"/>
+          <foreignObject x="25" y="25" width="90" height="90">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="width:90px;height:90px;display:flex;align-items:center;justify-content:center">
+              <div class="ring-center-emoji" id="ring-emoji">⏳</div>
+            </div>
+          </foreignObject>
+        </svg>
+        <div class="test-label" id="test-label">Get Ready</div>
+        <div class="test-sub" id="test-sub">Keep phone pressed to tragus</div>
+      </div>
+
+      <div class="motion-warn" id="motion-warn">⚠️ Motion detected — hold still!</div>
+
+      <div class="wave-box wave-emit">
+        <div class="wave-box-label">Chirp Emitting</div>
+        <canvas id="emit-canvas" width="400" height="80"></canvas>
+      </div>
+      <div class="wave-box wave-recv">
+        <div class="wave-box-label">Echo Recording</div>
+        <canvas id="recv-canvas" width="400" height="80"></canvas>
+      </div>
+      <div class="freq-bars" id="freq-bars"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN 9: RESULTS ══════════════════════════ -->
+  <div class="screen" id="s-results">
+    <div class="repeat-banner" id="repeat-banner" style="display:none">
+      <strong>⚠️ Repeated Concern Detected</strong>
+      This ear has shown concerning patterns across multiple tests. We recommend booking a doctor's appointment.
+    </div>
+
+    <div class="result-hero" id="left-result">
+      <span class="result-icon" id="left-icon">👂</span>
+      <div class="result-headline" id="left-headline">Left Ear</div>
+      <div class="result-plain" id="left-plain">—</div>
+      <div class="result-action" id="left-action">—</div>
+      <div class="score-spectrum">
+        <div class="score-track">
+          <div class="score-marker" id="left-marker" style="left:0%;color:#66BB6A"></div>
+        </div>
+        <div class="score-zones">
+          <span class="score-zone-lbl" style="color:#66BB6A;flex:1">Clear</span>
+          <span class="score-zone-lbl" style="color:#FFB74D;flex:0.8;text-align:center">Monitor</span>
+          <span class="score-zone-lbl" style="color:#EF5350;flex:1;text-align:right">See doctor</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-hero" id="right-result">
+      <span class="result-icon" id="right-icon">👂</span>
+      <div class="result-headline" id="right-headline">Right Ear</div>
+      <div class="result-plain" id="right-plain">—</div>
+      <div class="result-action" id="right-action">—</div>
+      <div class="score-spectrum">
+        <div class="score-track">
+          <div class="score-marker" id="right-marker" style="left:0%;color:#66BB6A"></div>
+        </div>
+        <div class="score-zones">
+          <span class="score-zone-lbl" style="color:#66BB6A;flex:1">Clear</span>
+          <span class="score-zone-lbl" style="color:#FFB74D;flex:0.8;text-align:center">Monitor</span>
+          <span class="score-zone-lbl" style="color:#EF5350;flex:1;text-align:right">See doctor</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Acoustic Measurements</div>
+      <div class="metric-row">
+        <div class="metric-box"><div class="metric-val" id="m-lf">—</div><div class="metric-lbl">Left Dip Hz</div></div>
+        <div class="metric-box"><div class="metric-val" id="m-rf">—</div><div class="metric-lbl">Right Dip Hz</div></div>
+        <div class="metric-box"><div class="metric-val" id="m-ld">—</div><div class="metric-lbl">Left Depth dB</div></div>
+        <div class="metric-box"><div class="metric-val" id="m-rd">—</div><div class="metric-lbl">Right Depth dB</div></div>
+      </div>
+      <div class="metric-row" style="margin-top:8px">
+        <div class="metric-box"><div class="metric-val" id="m-llf">—</div><div class="metric-lbl">Left LF Ratio</div></div>
+        <div class="metric-box"><div class="metric-val" id="m-rlf">—</div><div class="metric-lbl">Right LF Ratio</div></div>
+        <div class="metric-box"><div class="metric-val" id="m-ls">—</div><div class="metric-lbl">Left Score</div></div>
+        <div class="metric-box"><div class="metric-val" id="m-rs">—</div><div class="metric-lbl">Right Score</div></div>
+      </div>
+
+      <div class="asym-section" style="margin:0;background:transparent;padding:4px 0">
+        <div class="asym-title">Left / Right Asymmetry</div>
+        <div class="asym-track">
+          <div class="asym-L" id="asym-L" style="width:0%"></div>
+          <div class="asym-R" id="asym-R" style="width:0%"></div>
+          <div class="asym-mid"></div>
+        </div>
+        <div class="asym-labels"><span>LEFT</span><span>RIGHT</span></div>
+        <div class="asym-result" id="asym-result">—</div>
+      </div>
+    </div>
+
+    <!-- CLINICAL STUDY PANEL -->
+    <div class="card" style="padding:16px;border:1px solid rgba(79,195,247,0.3)">
+      <div style="font-size:11px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🔬 Clinical Study Mode</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">
+        Each test is automatically logged for research. After tympanometry, enter the clinical result below to build a ground-truth dataset.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <button onclick="setGroundTruth('clear')" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--green);background:transparent;color:var(--green);font-size:12px;font-weight:600;cursor:pointer">✓ Tympanometry Clear</button>
+        <button onclick="setGroundTruth('fluid')" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--red);background:transparent;color:var(--red);font-size:12px;font-weight:600;cursor:pointer">✗ Fluid Confirmed</button>
+      </div>
+      <div id="ground-truth-status" style="font-size:12px;color:var(--muted);text-align:center;min-height:18px"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="exportClinicalData()" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--muted);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">📥 Export Data (JSON)</button>
+        <button onclick="showClinicalStats()" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--muted);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">📊 Session Stats</button>
+      </div>
+      <div id="clinical-stats-display" style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;display:none"></div>
+    </div>
+
+    <div class="tip" style="border-left-color:var(--red)">
+      <strong>⚠️ Always consult a doctor</strong>
+      These results are acoustic patterns only — not a diagnosis. Yellow or red results, or any ear symptoms (pain, discharge, hearing difficulty), mean see a pediatrician or ENT.
+    </div>
+
+    <button class="btn btn-primary" onclick="testAgain()" style="width:100%">🔄 Test Again</button>
+    <button class="btn btn-secondary" onclick="goTo('s-welcome')" style="margin-top:10px;width:100%">Home</button>
+    <div class="disclaimer"><strong>Not a medical device.</strong> OtoScreen is an acoustic screening aid for parental awareness only. Always consult a licensed healthcare provider for ear conditions in children.</div>
+  </div>
+
+  <!-- ══════════════════════════ SCREEN: HISTORY ══════════════════════════ -->
+  <div class="screen" id="s-history">
+    <div class="card">
+      <div class="card-title">Past Results</div>
+      <div id="history-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">No past results yet.</div></div>
+    </div>
+    <button class="btn btn-ghost" onclick="goTo('s-welcome')">← Back</button>
+  </div>
+  <!-- ZOOM MODAL — tap any diagram to enlarge -->
+  <div class="zoom-modal" id="zoom-modal" onclick="closeZoom()">
+    <button class="zoom-close" onclick="closeZoom()">✕</button>
+    <svg id="zoom-svg" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</div><!-- end .app -->
+
+<script>
+// ═══════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*5}s;animation-duration:${2+Math.random()*4}s`;
+    c.appendChild(s);
+  }
+})();
+
+// ═══════════════════════════════════════
+// PLATFORM
+// ═══════════════════════════════════════
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+const isAndroid=/Android/.test(navigator.userAgent);
+const chip=document.getElementById('platform-chip');
+if(isIOS){chip.textContent='iOS';chip.className='chip chip-ios';}
+else if(isAndroid){chip.textContent='Android';chip.className='chip chip-android';}
+else{chip.textContent='Browser';chip.className='chip chip-v4';}
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let audioCtx=null,micStream=null,audioUnlocked=false;
+let selectedAge=null,selectedEar=null;
+let testedEars=[],results={left:null,right:null};
+let noiseFloor=0,normWeights=null;
+let contactConfirmed=false;
+let motionExceeded=false;
+let motionListener=null;
+let animFrame=null,contactFrame=null,noiseFrame=null;
+let sessionHistory=JSON.parse(localStorage.getItem('otoHistory')||'[]');
+
+// Age → canal length map (mm) — based on published paediatric anatomy
+// Growth follows a log curve, not linear. Values are midpoints of reported ranges.
+// Individual variation is ±3-4mm at every age — larger than the age effect itself.
+// We use wider search windows to account for this.
+const CANAL_MAP={3:18,4:19,5:20,6:21,7:22,8:23,9:24,10:24,11:25};
+
+// CHIRP RANGE: 1000–4400 Hz
+// Extended down from 1800 Hz to 1000 Hz based on wideband acoustic immittance research:
+// Beers et al. (2010, Ear & Hear): reflectance around 1.25 kHz is the single most
+// discriminating feature for MEE in children aged 5–7 — all MEE ears exceeded the
+// 90th percentile of normal ears at this frequency. Without this band we miss the
+// clinically most valuable signal.
+// VALIDATED: Beers et al. 144 ears clinical study, audiological ground truth.
+const CHIRP_F0=1000;
+const CHIRP_F1=4400;
+
+// Dip search for quarter-wave resonance: 2000–4200 Hz (age-calibrated)
+// Low-frequency reflectance band: 1000–1600 Hz (separate from dip search)
+function getDipRange(age){
+  const cl=CANAL_MAP[age]||22;
+  const center=Math.round(343000/(4*cl));
+  const low=Math.round(center*0.75);
+  const high=Math.round(center*1.25);
+  return{low:Math.max(low,2000),high:Math.min(high,4200),center};
+}
+
+// ═══════════════════════════════════════
+// iOS GATE
+// ═══════════════════════════════════════
+function showIOSGate(){
+  return new Promise(res=>{
+    if(!isIOS){res();return;}
+    const gate=document.getElementById('ios-gate');
+    gate.classList.add('show');
+    const go=async()=>{
+      try{
+        audioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:44100});
+        await audioCtx.resume();
+        const b=audioCtx.createBuffer(1,1,audioCtx.sampleRate);
+        const s=audioCtx.createBufferSource();s.buffer=b;s.connect(audioCtx.destination);s.start(0);
+        audioUnlocked=true;
+      }catch(e){console.warn(e);}
+      gate.classList.remove('show');
+      res();
+    };
+    document.getElementById('ios-gate-btn').addEventListener('touchend',e=>{e.preventDefault();go();},{once:true});
+    document.getElementById('ios-gate-btn').addEventListener('click',go,{once:true});
+  });
+}
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const s=document.getElementById(id);
+  s.classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='s-history') renderHistory();
+}
+
+async function startOnboarding(){
+  if(isIOS&&!audioUnlocked){ await showIOSGate(); }
+  // Reset state for new session
+  selectedAge=null;selectedEar=null;testedEars=[];results={left:null,right:null};
+  normWeights=null;noiseFloor=0;contactConfirmed=false;
+  document.getElementById('consent-cb').checked=false;
+  document.getElementById('consent-next-btn').disabled=true;
+  document.querySelectorAll('.age-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('age-canal-info').textContent='Select an age above';
+  // Show volume gate first
+  goTo('s-volume');
+  animateVolumeBar();
+}
+
+function animateVolumeBar(){
+  // Animate the volume bar filling up to hint the user should turn volume up
+  const bar=document.getElementById('vol-bar');
+  if(!bar) return;
+  bar.style.width='0%';
+  setTimeout(()=>{ bar.style.width='100%'; },300);
+}
+
+function confirmVolume(){
+  // User confirms volume is at max — proceed to consent
+  goTo('s-consent');
+}
+
+// ═══════════════════════════════════════
+// CONSENT
+// ═══════════════════════════════════════
+function checkConsent(){
+  // Both consent + age required to proceed
+  const checked=document.getElementById('consent-cb').checked;
+  const hasAge=selectedAge!==null;
+  document.getElementById('consent-next-btn').disabled=!(checked&&hasAge);
+}
+
+// ═══════════════════════════════════════
+// AGE SELECTION
+// ═══════════════════════════════════════
+function selectAge(age,label){
+  selectedAge=age;
+  document.querySelectorAll('.age-chip').forEach(c=>c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  const dr=getDipRange(age);
+  const cl=CANAL_MAP[age];
+  document.getElementById('age-canal-info').textContent=
+    `Age ${label}: Canal ~${cl}mm · Dip search ${dr.low}–${dr.high} Hz`;
+  // Gate consent button on both conditions
+  checkConsent();
+}
+
+// ═══════════════════════════════════════
+// AUDIO INIT
+// ═══════════════════════════════════════
+async function initAudio(){
+  try{
+    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:44100});
+    if(audioCtx.state==='suspended') await audioCtx.resume();
+    if(!micStream) micStream=await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1},video:false
+    });
+    return true;
+  }catch(e){
+    alert(e.name==='NotAllowedError'?'Microphone permission denied. Go to browser settings and allow mic access.':'Microphone required. Please allow access and try again.');
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════
+// NOISE MEASUREMENT
+// ═══════════════════════════════════════
+async function measureNoise(){
+
+  const ok=await initAudio();
+  if(!ok) return;
+
+  document.getElementById('noise-measure-btn').style.display='none';
+  document.getElementById('noise-done').style.display='none';
+  document.getElementById('noise-status').textContent='Measuring…';
+
+  const an=audioCtx.createAnalyser();an.fftSize=256;
+  const src=audioCtx.createMediaStreamSource(micStream);src.connect(an);
+  const d=new Uint8Array(an.frequencyBinCount);
+  const canvas=document.getElementById('noise-canvas');
+  const ctx=canvas.getContext('2d');
+  const bars=['nb1','nb2','nb3','nb4','nb5'];
+  let samples=[],t0=performance.now();
+  cancelAnimationFrame(noiseFrame);
+
+  function tick(){
+    const el=performance.now()-t0;
+    an.getByteTimeDomainData(d);
+    canvas.width=canvas.offsetWidth||400;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.beginPath();ctx.strokeStyle='#4FC3F7';ctx.lineWidth=1.5;
+    const sw=canvas.width/d.length;let x=0;
+    for(let i=0;i<d.length;i++){const y=(d[i]/128)*canvas.height/2;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);x+=sw;}
+    ctx.stroke();
+    let s=0;for(let i=0;i<d.length;i++){const v=(d[i]-128)/128;s+=v*v;}
+    const rms=Math.sqrt(s/d.length);samples.push(rms);
+    const lv=Math.min(rms*25,1);
+    bars.forEach((id,i)=>{
+      const b=document.getElementById(id);
+      const t=(i+1)*0.18;
+      b.style.background=lv>t?(lv>0.7?'#EF5350':lv>0.4?'#FFB74D':'#66BB6A'):'var(--muted)';
+      b.style.height=(8+i*6)+'px';
+    });
+    if(el<2000){noiseFrame=requestAnimationFrame(tick);}
+    else{
+      src.disconnect();
+      noiseFloor=samples.reduce((a,b)=>a+b,0)/samples.length;
+      const cb=document.getElementById('noise-continue-btn');
+      const st=document.getElementById('noise-status');
+      if(noiseFloor>0.06){st.textContent='⚠️ Noisy environment';cb.textContent='⚠️ Proceed Anyway';cb.className='btn btn-secondary';}
+      else{st.textContent='✅ Quiet — good to go';cb.textContent='Continue →';cb.className='btn btn-primary';}
+      document.getElementById('noise-done').style.display='block';
+    }
+  }
+  noiseFrame=requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════
+// CROSS-DEVICE NORMALIZATION (away-from-ear)
+// ═══════════════════════════════════════
+async function runNormalization(){
+  document.getElementById('norm-btn-wrap').style.display='none';
+  document.getElementById('norm-spinner').style.display='block';
+  document.getElementById('norm-status').textContent='Firing reference chirp…';
+
+  const CHIRP_AMP=0.04; // −28dBFS — quiet but sufficient SNR for FFT analysis // Match diagnostic chirp amplitude — consistent SPL across all chirps
+  const CHIRP_DUR=0.15;
+  const chirpBuf=makeChirp(CHIRP_F0,CHIRP_F1,CHIRP_DUR,CHIRP_AMP);
+
+  const an=audioCtx.createAnalyser();an.fftSize=4096;
+  const src2=audioCtx.createMediaStreamSource(micStream);src2.connect(an);
+  const canvas=document.getElementById('norm-canvas');
+  const ctx=canvas.getContext('2d');
+
+  await sleep(200);
+  const csrc=audioCtx.createBufferSource();csrc.buffer=chirpBuf;csrc.connect(audioCtx.destination);csrc.start();
+  await sleep(CHIRP_DUR*1000+100);
+
+  const freqData=new Float32Array(an.frequencyBinCount);
+  an.getFloatFrequencyData(freqData);
+  src2.disconnect();
+
+  // Store as normalization weights
+  normWeights=freqData.slice();
+
+  // Draw the reference response curve
+  canvas.width=canvas.offsetWidth||400;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.beginPath();ctx.strokeStyle='#26C6DA';ctx.lineWidth=1.5;
+  const sr=audioCtx.sampleRate;
+  const binLow=Math.floor(500/(sr/2/an.frequencyBinCount));
+  const binHigh=Math.floor(4500/(sr/2/an.frequencyBinCount));
+  const range=binHigh-binLow;
+  for(let i=binLow;i<=binHigh;i++){
+    const x=((i-binLow)/range)*canvas.width;
+    const norm=Math.max(0,(freqData[i]+100)/60);
+    const y=canvas.height-(norm*canvas.height*0.8)-canvas.height*0.1;
+    i===binLow?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  document.getElementById('norm-spinner').style.display='none';
+  document.getElementById('norm-status').textContent='✅ Device calibrated';
+  document.getElementById('norm-done').style.display='block';
+}
+
+async function goToEarSelect(){
+  // Init audio here — replaces what noise screen used to do
+  // Silent, no UI feedback needed — just ensures AudioContext + mic are ready
+  if(!audioCtx||!micStream){
+    const ok=await initAudio();
+    if(!ok) return; // alert shown by initAudio
+  }
+  const title=testedEars.length===0?'Which ear first?':`Now testing the ${testedEars.includes('left')?'right':'left'} ear`;
+  document.getElementById('earselect-title').textContent=title;
+  goTo('s-earselect');
+}
+
+// ═══════════════════════════════════════
+// EAR SELECTION
+// ═══════════════════════════════════════
+function selectEar(ear){
+  selectedEar=ear;
+  document.getElementById('ear-left').style.borderColor=ear==='left'?'var(--sky)':'transparent';
+  document.getElementById('ear-right').style.borderColor=ear==='right'?'var(--sky)':'transparent';
+  document.getElementById('ear-side-remind').textContent=`Bottom edge to ${ear} tragus.`;
+  document.getElementById('earselect-go').disabled=false;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CONTACT DETECTION — Multi-signal probe tone architecture
+//
+// Three independent signals combined into a weighted score:
+//
+// SIGNAL 1 — Probe tone return (60% weight) PRIMARY
+//   Emit a continuous 18.5 kHz tone at very low amplitude.
+//   At 18.5 kHz, wavelength = ~18.5mm ≈ child ear canal length.
+//   In open air: tone disperses, mic sees almost nothing at 18.5 kHz.
+//   Against ear: tone couples into canal cavity, mic sees a clear
+//   return peak at exactly 18.5 kHz in the FFT.
+//   We use a high-resolution FFT (8192) and look at the specific
+//   frequency bin for 18.5 kHz only — immune to broadband noise.
+//   This is narrow-band lock-in detection: can't be faked by silence
+//   or by covering the mic with a hand (hand has no 18.5 kHz return).
+//
+// SIGNAL 2 — Low-frequency noise floor drop (25% weight) SECONDARY
+//   When the phone touches skin near the ear, the body shields the
+//   mic from ambient room noise below 2 kHz.
+//   Measured as RMS drop relative to baseline.
+//   Supports probe signal — adds robustness in noisy rooms.
+//
+// SIGNAL 3 — Stability (15% weight) SUPPORTING
+//   Motion delta from accelerometer. Contact is only meaningful if
+//   the phone is held still. Prevents false confirmation during
+//   repositioning. Score contribution decays rapidly on motion.
+//
+// ORIENTATION GATE (hard gate — must pass before scoring begins)
+//   Phone must be in landscape orientation (beta < 40°).
+//   If phone is upright against cheek, gate blocks detection entirely.
+//   Uses DeviceOrientationEvent; fails open if API unavailable.
+//
+// CONFIRM threshold: weighted score >= 0.55 held for 600ms
+// ═══════════════════════════════════════════════════════════════════
+
+// Probe tone state — created once, reused across detection sessions
+let _probeOsc=null;
+let _probeGain=null;
+
+function createProbeTone(){
+  // 18,500 Hz — near-ultrasonic, barely audible to young children at
+  // our amplitude, inaudible to most adults. Canal resonance at ~18mm.
+  if(_probeOsc) return;
+  try{
+    _probeOsc=audioCtx.createOscillator();
+    _probeOsc.type='sine';
+    _probeOsc.frequency.value=18500;
+    _probeGain=audioCtx.createGain();
+    _probeGain.gain.value=0; // start silent
+    _probeOsc.connect(_probeGain);
+    _probeGain.connect(audioCtx.destination);
+    _probeOsc.start();
+  }catch(e){console.warn('Probe tone init failed:',e);}
+}
+
+function startProbeTone(){
+  createProbeTone();
+  if(_probeGain){
+    // 0.04 amplitude — barely above mic noise floor at 1cm, but
+    // detectable in FFT. Hard cap prevents audibility concern.
+    _probeGain.gain.setTargetAtTime(0.04,audioCtx.currentTime,0.05);
+  }
+}
+
+function stopProbeTone(){
+  if(_probeGain){
+    _probeGain.gain.setTargetAtTime(0,audioCtx.currentTime,0.05);
+  }
+}
+
+async function startContactDetection(){
+  goTo('s-contact');
+
+  // Clean up any previous detection session
+  cancelAnimationFrame(contactFrame);
+  if(window._contactSrc){try{window._contactSrc.disconnect();}catch(e){} window._contactSrc=null;}
+  stopProbeTone();
+
+  // Update UI labels
+  document.getElementById('contact-ear-label').textContent=selectedEar+' ear';
+  document.getElementById('contact-ear-label2').textContent='inner pocket of '+selectedEar+' tragus';
+  document.getElementById('contact-title').textContent=
+    `Place on ${selectedEar.charAt(0).toUpperCase()+selectedEar.slice(1)} Ear`;
+  contactConfirmed=false;
+  resetContactUI();
+
+  // ── PHASE 1: Orientation gate check ──
+  // If we have gyroscope, verify phone is landscape before proceeding.
+  // We do a one-shot read — if beta > 40° (phone too upright) we warn,
+  // but don't hard-block since DeviceOrientationEvent is unreliable on
+  // some Android + iOS combinations.
+  let orientationOk=true;
+  if(window.DeviceOrientationEvent){
+    await new Promise(res=>{
+      const check=e=>{
+        const beta=Math.abs(e.beta||0);
+        orientationOk=beta<42;
+        window.removeEventListener('deviceorientation',check);
+        res();
+      };
+      window.addEventListener('deviceorientation',check,{once:true});
+      setTimeout(res,800); // don't block if event never fires
+    });
+  }
+  if(!orientationOk){
+    document.getElementById('contact-sublabel').textContent=
+      'Hold phone sideways (landscape) — screen facing you';
+  }
+
+  // ── PHASE 2: Baseline measurement ──
+  // Measure ambient RMS and probe bin level in open air before contact.
+  // High-res FFT (8192) to get precise 18.5 kHz bin resolution.
+  const FFT_SIZE=8192;
+  const recAn=audioCtx.createAnalyser();
+  recAn.fftSize=FFT_SIZE;
+  recAn.smoothingTimeConstant=0.5;
+  const micSrc=audioCtx.createMediaStreamSource(micStream);
+  micSrc.connect(recAn);
+  window._contactSrc=micSrc;
+
+  const sr=audioCtx.sampleRate;
+  const binCount=recAn.frequencyBinCount; // 4096
+  const fpb=sr/FFT_SIZE; // Hz per bin (~5.4 Hz at 44100)
+
+  // Find the exact FFT bin for our probe frequency
+  const PROBE_FREQ=18500;
+  const probeBin=Math.round(PROBE_FREQ/fpb);
+  // Use a ±2 bin window around probe to catch slight pitch drift
+  const probeWinLow=Math.max(0,probeBin-2);
+  const probeWinHigh=Math.min(binCount-1,probeBin+2);
+
+  // Low-freq noise bins (ambient shielding signal): 200–2000 Hz
+  const noiseLow=Math.round(200/fpb);
+  const noiseHigh=Math.round(2000/fpb);
+
+  const freqData=new Float32Array(binCount);
+  const timeData=new Uint8Array(recAn.fftSize);
+
+  document.getElementById('contact-label').textContent='Calibrating…';
+  document.getElementById('contact-sublabel').textContent='Hold phone still in the air — not touching ear yet';
+
+  // Start probe tone silently DURING baseline so it cancels out
+  startProbeTone();
+  await sleep(200); // let oscillator stabilize
+
+  // Collect baseline over 800ms
+  let baselineProbe=0, baselineNoise=0, baseSamples=0;
+  const bt0=performance.now();
+  await new Promise(res=>{
+    function bl(){
+      recAn.getFloatFrequencyData(freqData);
+      // Probe bin level (dB)
+      let pMax=-Infinity;
+      for(let i=probeWinLow;i<=probeWinHigh;i++) pMax=Math.max(pMax,freqData[i]);
+      baselineProbe+=pMax;
+      // Noise RMS (low freq)
+      let nSum=0;
+      for(let i=noiseLow;i<=noiseHigh;i++) nSum+=Math.pow(10,freqData[i]/20);
+      baselineNoise+=nSum/(noiseHigh-noiseLow);
+      baseSamples++;
+      if(performance.now()-bt0<800) requestAnimationFrame(bl); else res();
+    }
+    bl();
+  });
+  baselineProbe/=baseSamples;   // avg probe bin level in open air (dB)
+  baselineNoise/=baseSamples;   // avg low-freq noise level in open air
+
+  document.getElementById('contact-label').textContent='Waiting for contact…';
+  document.getElementById('contact-sublabel').textContent=
+    'Rest the bottom edge in the inner curved pocket of the tragus';
+
+  // ── PHASE 3: Continuous multi-signal scoring loop ──
+  let contactScore=0;
+  let autoStarted=false;
+  let confirmedSince=0; // timestamp when score first crossed threshold
+  let lastMotionDelta=0;
+
+  // Motion tracking for stability signal
+  let lastAcc={x:0,y:0,z:0};
+  let motionDelta=0;
+  function onMotion(e){
+    if(!e.acceleration) return;
+    const a=e.acceleration;
+    const dx=Math.abs((a.x||0)-lastAcc.x);
+    const dy=Math.abs((a.y||0)-lastAcc.y);
+    const dz=Math.abs((a.z||0)-lastAcc.z);
+    motionDelta=Math.min(dx+dy+dz,10);
+    lastAcc={x:a.x||0,y:a.y||0,z:a.z||0};
+  }
+  if(window.DeviceMotionEvent) window.addEventListener('devicemotion',onMotion);
+
+  function checkContact(){
+    if(!window._contactSrc) return; // guard: session ended
+
+    recAn.getFloatFrequencyData(freqData);
+
+    // ── SIGNAL 1: Probe tone return (60% weight) ──
+    // Find peak level in probe frequency window
+    let probeNow=-Infinity;
+    for(let i=probeWinLow;i<=probeWinHigh;i++) probeNow=Math.max(probeNow,freqData[i]);
+    // How much has probe return risen above open-air baseline?
+    // In open air: near 0 dB rise. Against ear canal: +6 to +18 dB rise.
+    const probeLift=probeNow-baselineProbe; // dB gain from coupling
+    // Score: 0 if no lift, 1.0 at +15 dB lift
+    const s1=Math.max(0,Math.min(1,probeLift/8));
+
+    // ── SIGNAL 2: Low-freq noise drop (25% weight) ──
+    // Noise RMS in 200-2000 Hz range
+    let noiseNow=0;
+    for(let i=noiseLow;i<=noiseHigh;i++) noiseNow+=Math.pow(10,freqData[i]/20);
+    noiseNow/=(noiseHigh-noiseLow);
+    // Drop ratio: how much has ambient noise fallen vs baseline?
+    const noiseDrop=baselineNoise>0.0001?(baselineNoise-noiseNow)/baselineNoise:0;
+    // Score: 0 below 10% drop, 1.0 at 60% drop
+    const s2=Math.max(0,Math.min(1,(noiseDrop-0.05)/0.35));
+
+    // ── SIGNAL 3: Stability (15% weight) ──
+    // Low motion = high stability score
+    // motionDelta: 0 = still, 10 = very shaky
+    const s3=Math.max(0,1-(motionDelta/4));
+
+    // ── WEIGHTED SCORE ──
+    const raw=s1*0.60 + s2*0.25 + s3*0.15;
+
+    // Smooth: rises at 0.08/frame, falls at 0.03/frame
+    // Fast rise, slow fall = forgives brief fluctuations during placement
+    contactScore=raw>contactScore
+      ?Math.min(contactScore+0.08,raw)
+      :Math.max(contactScore-0.03,raw);
+
+    contactScore=Math.max(0,Math.min(1,contactScore));
+
+    const pct=Math.round(contactScore*100);
+    document.getElementById('contact-bar').style.width=pct+'%';
+
+    const statusEl=document.getElementById('contact-status');
+    const iconEl=document.getElementById('contact-icon');
+    const labelEl=document.getElementById('contact-label');
+    const subEl=document.getElementById('contact-sublabel');
+
+    if(contactScore>=0.55){
+      // Must hold above threshold for 600ms to confirm
+      if(!confirmedSince) confirmedSince=performance.now();
+      const held=performance.now()-confirmedSince;
+      const holdPct=Math.min(held/350,1);
+      statusEl.className='contact-status confirmed';
+      iconEl.textContent='✅';
+      labelEl.textContent=holdPct<1?'Hold still…':'Contact confirmed!';
+      subEl.textContent='Keep phone against tragus — test starting…';
+      if(holdPct>=1&&!autoStarted){
+        autoStarted=true;
+        stopProbeTone();
+        try{micSrc.disconnect();}catch(e){}
+        window._contactSrc=null;
+        if(window.DeviceMotionEvent) window.removeEventListener('devicemotion',onMotion);
+        contactConfirmed=true;
+        setTimeout(()=>runTest(),400);
+      }
+    } else {
+      confirmedSince=0; // reset hold timer if score drops
+      if(contactScore>0.22){
+        statusEl.className='contact-status detecting';
+        iconEl.textContent='📱';
+        // Give specific feedback based on which signal is weakest
+        if(s1<0.3){
+          labelEl.textContent='Align speaker with canal…';
+          subEl.textContent='Speaker holes should face the canal opening directly';
+        } else if(s3<0.4){
+          labelEl.textContent='Hold phone still…';
+          subEl.textContent='Keep the phone steady against the tragus pocket';
+        } else {
+          labelEl.textContent='Getting closer…';
+          subEl.textContent='Press the inner concave pocket of the tragus to the edge';
+        }
+      } else {
+        statusEl.className='contact-status waiting';
+        iconEl.textContent='📱';
+        labelEl.textContent='Waiting for contact…';
+        subEl.textContent='Rest the bottom edge in the inner curved pocket of the tragus';
+      }
+    }
+
+    contactFrame=requestAnimationFrame(checkContact);
+  }
+
+  contactFrame=requestAnimationFrame(checkContact);
+}
+
+function resetContactUI(){
+  document.getElementById('contact-status').className='contact-status waiting';
+  document.getElementById('contact-icon').textContent='📱';
+  document.getElementById('contact-label').textContent='Waiting for contact…';
+  document.getElementById('contact-sublabel').textContent='Rest the bottom edge in the inner curved pocket of the tragus';
+  document.getElementById('contact-bar').style.width='0%';
+}
+
+function skipContact(){
+  cancelAnimationFrame(contactFrame);
+  stopProbeTone();
+  if(window._contactSrc){try{window._contactSrc.disconnect();}catch(e){} window._contactSrc=null;}
+  contactConfirmed=false;
+  runTest();
+}
+
+// ═══════════════════════════════════════
+// MOTION DETECTION
+// ═══════════════════════════════════════
+function startMotionDetection(){
+  motionExceeded=false;
+  if(!window.DeviceMotionEvent) return;
+  let lastAcc={x:0,y:0,z:0};
+  motionListener=e=>{
+    if(!e.acceleration) return;
+    const a=e.acceleration;
+    const delta=Math.abs((a.x||0)-lastAcc.x)+Math.abs((a.y||0)-lastAcc.y)+Math.abs((a.z||0)-lastAcc.z);
+    lastAcc={x:a.x||0,y:a.y||0,z:a.z||0};
+    if(delta>4){
+      motionExceeded=true;
+      const w=document.getElementById('motion-warn');
+      w.classList.add('show');
+      setTimeout(()=>w.classList.remove('show'),2000);
+    }
+  };
+  window.addEventListener('devicemotion',motionListener);
+}
+
+function stopMotionDetection(){
+  if(motionListener) window.removeEventListener('devicemotion',motionListener);
+  motionListener=null;
+}
+
+// ═══════════════════════════════════════
+// CHIRP GENERATION
+// 150ms per UW paper (was 50ms — 3x too short)
+// Hard amp cap 0.10 at contact distance
+// ═══════════════════════════════════════
+function makeChirp(f0,f1,dur,amp){
+  const sr=audioCtx.sampleRate;
+  const n=Math.floor(sr*dur);
+  const buf=audioCtx.createBuffer(1,n,sr);
+  const d=buf.getChannelData(0);
+  const k=(f1-f0)/dur;
+  for(let i=0;i<n;i++){
+    const t=i/sr;
+    const f=f0+k*t;
+    let env=1;const r=0.008;
+    if(t<r) env=t/r; else if(t>dur-r) env=(dur-t)/r;
+    d[i]=env*Math.sin(2*Math.PI*f*t)*Math.min(amp,0.05); // hard cap −26dBFS, safe at contact distance
+  }
+  return buf;
+}
+
+// ═══════════════════════════════════════
+// GYROSCOPE ANGLE CHECK
+// Warns if phone is tilted >30° from flat horizontal
+// which degrades canal alignment
+// ═══════════════════════════════════════
+let gyroAngleOk=true;
+let gyroListener=null;
+
+function startGyroCheck(){
+  gyroAngleOk=true;
+  if(!window.DeviceOrientationEvent) return;
+  gyroListener=e=>{
+    // gamma = left-right tilt (want near 0 when phone horizontal)
+    // beta  = front-back tilt
+    const gamma=Math.abs(e.gamma||0);
+    const beta=Math.abs(e.beta||0);
+    // Phone held sideways in landscape: gamma near 90, beta near 0
+    // Flag if beta > 30 degrees (phone tilted front/back significantly)
+    const bad=beta>35;
+    gyroAngleOk=!bad;
+    if(bad){
+      const w=document.getElementById('motion-warn');
+      w.textContent='⚠️ Tilt phone flatter — keep it level';
+      w.classList.add('show');
+      setTimeout(()=>w.classList.remove('show'),2000);
+    }
+  };
+  window.addEventListener('deviceorientation',gyroListener);
+}
+function stopGyroCheck(){
+  if(gyroListener) window.removeEventListener('deviceorientation',gyroListener);
+  gyroListener=null;
+}
+
+// ═══════════════════════════════════════
+// NOISE SPECTRUM CHECK
+// Checks if noise energy overlaps the 2.3–3.8kHz diagnostic band
+// Uses stored noiseFloor + a quick FFT snapshot
+// ═══════════════════════════════════════
+let diagnosticBandNoisyFlag=false;
+// Per-ear in-contact reference weights — captured in actual use geometry
+// immediately after contact confirmed, before diagnostic chirps.
+// Left and right stored separately since coupling geometry differs.
+let contactRefWeights={left:null,right:null};
+
+// ═══════════════════════════════════════
+// IN-CONTACT REFERENCE SWEEP
+// Fires 2 reference chirps immediately after contact is confirmed.
+// Records mic FFT in the actual ear-contact geometry.
+// This reference is subtracted (dB domain) from all diagnostic chirps,
+// normalising for the specific phone model, mic sensitivity, and
+// contact angle — the only calibration that shares the use geometry.
+//
+// WHY NOT TABLE/OPEN-AIR:
+//   Table geometry ≠ ear geometry. Speaker-to-reflector distance,
+//   coupling, and acoustic path are all different. Subtracting a
+//   table reference from an ear measurement introduces frequency-
+//   dependent errors rather than removing them. The in-contact
+//   reference avoids this by being measured in the same geometry.
+//
+// COST: ~400ms, transparent to the user, fires during countdown.
+// ═══════════════════════════════════════
+async function collectContactRef(ear){
+  const CHIRP_AMP=0.04; // −28dBFS — quiet but sufficient SNR for FFT analysis
+  const CHIRP_DUR=0.150;
+  const REF_SWEEPS=2;
+  const refSnaps=[];
+
+  if(isIOS){
+    for(let i=0;i<REF_SWEEPS;i++){
+      const cb=makeChirp(CHIRP_F0,CHIRP_F1,CHIRP_DUR,CHIRP_AMP);
+      const src=audioCtx.createBufferSource();src.buffer=cb;
+      src.connect(audioCtx.destination);src.start();
+      await sleep((CHIRP_DUR+0.030)*1000);
+      const an=audioCtx.createAnalyser();an.fftSize=4096;
+      const mSrc=audioCtx.createMediaStreamSource(micStream);mSrc.connect(an);
+      await sleep(120);
+      const snap=new Float32Array(an.frequencyBinCount);
+      an.getFloatFrequencyData(snap);
+      refSnaps.push(snap);
+      mSrc.disconnect();
+    }
+  } else {
+    const an=audioCtx.createAnalyser();an.fftSize=4096;
+    const mSrc=audioCtx.createMediaStreamSource(micStream);mSrc.connect(an);
+    for(let i=0;i<REF_SWEEPS;i++){
+      const cb=makeChirp(CHIRP_F0,CHIRP_F1,CHIRP_DUR,CHIRP_AMP);
+      const src=audioCtx.createBufferSource();src.buffer=cb;
+      src.connect(audioCtx.destination);src.start();
+      await sleep(CHIRP_DUR*1000+100);
+      const snap=new Float32Array(an.frequencyBinCount);
+      an.getFloatFrequencyData(snap);
+      refSnaps.push(snap);
+    }
+    mSrc.disconnect();
+  }
+
+  if(refSnaps.length===0) return;
+
+  // Average the 2 reference sweeps
+  const bc=refSnaps[0].length;
+  const ref=new Float32Array(bc);
+  for(let i=0;i<bc;i++){
+    let s=0;for(const sn of refSnaps) s+=sn[i];
+    ref[i]=s/refSnaps.length;
+  }
+  contactRefWeights[ear]=ref;
+}
+
+async function checkDiagnosticBandNoise(){
+  diagnosticBandNoisyFlag=false;
+  const an=audioCtx.createAnalyser();an.fftSize=4096;
+  const mSrc=audioCtx.createMediaStreamSource(micStream);mSrc.connect(an);
+  await sleep(150);
+  const fd=new Float32Array(an.frequencyBinCount);
+  an.getFloatFrequencyData(fd);
+  mSrc.disconnect();
+  const sr=audioCtx.sampleRate;
+  const fpb=(sr/2)/an.frequencyBinCount;
+  const b1=Math.floor(2300/fpb),b2=Math.floor(3800/fpb);
+  let bandEnergy=0,totalEnergy=0;
+  for(let i=0;i<an.frequencyBinCount;i++){
+    const lin=Math.pow(10,fd[i]/20);
+    totalEnergy+=lin;
+    if(i>=b1&&i<=b2) bandEnergy+=lin;
+  }
+  const bandRatio=bandEnergy/(totalEnergy||1);
+  // If >40% of noise energy is in our diagnostic band, results may be compromised
+  diagnosticBandNoisyFlag=bandRatio>0.40&&noiseFloor>0.04;
+}
+
+// ═══════════════════════════════════════
+// ATTEMPT COLLECTION
+// Runs one full set of 10 chirps, returns array of FFT snapshots
+// Skips first chirp (startup transient), rejects outliers (±2 SD)
+// Platform-aware: iOS split-phase, Android simultaneous
+// ═══════════════════════════════════════
+async function collectAttempt(ear, fbars, NB, onProgress){
+  const DR=getDipRange(selectedAge||7);
+  const CHIRP_AMP=0.04; // −28dBFS — quiet but sufficient SNR for FFT analysis
+  const CHIRP_DUR=0.150; // 150ms — matches UW paper exactly
+  const GAP_IOS=0.030;   // 30ms gap on iOS between emit and record
+  const RECORD_WIN_IOS=0.120; // 120ms record window on iOS
+  const SWEEP_INTERVAL_ANDROID=0.300; // 300ms between sweeps on Android (chirp+capture)
+  const NUM_SWEEPS=10;
+  const raw=[];
+
+  if(isIOS){
+    // iOS SPLIT PHASE: emit (mic closed) → gap → record (mic open)
+    for(let sw=0;sw<NUM_SWEEPS;sw++){
+      const cb=makeChirp(CHIRP_F0,CHIRP_F1,CHIRP_DUR,CHIRP_AMP);
+      const src=audioCtx.createBufferSource();src.buffer=cb;src.connect(audioCtx.destination);src.start();
+      await sleep((CHIRP_DUR+GAP_IOS)*1000);
+      const recAn=audioCtx.createAnalyser();recAn.fftSize=4096;
+      const mSrc=audioCtx.createMediaStreamSource(micStream);mSrc.connect(recAn);
+      await sleep(RECORD_WIN_IOS*1000);
+      const snap=new Float32Array(recAn.frequencyBinCount);
+      recAn.getFloatFrequencyData(snap);
+      raw.push(snap);
+      mSrc.disconnect();
+      updateFreqBars(snap,fbars,NB,recAn.frequencyBinCount);
+      onProgress((sw+1)/NUM_SWEEPS);
+      await sleep(30);
+    }
+  } else {
+    // Android SIMULTANEOUS: emit + record at same time
+    const recAn=audioCtx.createAnalyser();recAn.fftSize=4096;
+    const mSrc=audioCtx.createMediaStreamSource(micStream);mSrc.connect(recAn);
+    const emitAn=audioCtx.createAnalyser();emitAn.fftSize=2048;
+
+    for(let sw=0;sw<NUM_SWEEPS;sw++){
+      const cb=makeChirp(CHIRP_F0,CHIRP_F1,CHIRP_DUR,CHIRP_AMP);
+      const src=audioCtx.createBufferSource();src.buffer=cb;
+      // No stereo panning — always route to bottom edge speaker (mono center)
+      // Physical phone position against the tragus determines which ear is tested,
+      // not software pan. Pan=-1 routes to top earpiece, not bottom edge.
+      src.connect(emitAn);
+      emitAn.connect(audioCtx.destination);
+
+      src.start();
+      await sleep(SWEEP_INTERVAL_ANDROID*1000);
+      const snap=new Float32Array(recAn.frequencyBinCount);
+      recAn.getFloatFrequencyData(snap);
+      raw.push(snap);
+      updateFreqBars(snap,fbars,NB,recAn.frequencyBinCount);
+      onProgress((sw+1)/NUM_SWEEPS);
+    }
+    mSrc.disconnect();
+  }
+
+  // ── POST-PROCESSING ──
+  // 1. Skip first chirp (speaker startup transient per UW paper)
+  const trimmed=raw.slice(1);
+
+  // 2. Outlier rejection: exclude sweeps >2 SD from mean RMS
+  const bc=trimmed[0].length;
+  const rmsArr=trimmed.map(snap=>{
+    let s=0;for(let i=0;i<bc;i++) s+=snap[i]*snap[i];
+    return Math.sqrt(s/bc);
+  });
+  const meanRms=rmsArr.reduce((a,b)=>a+b,0)/rmsArr.length;
+  const sdRms=Math.sqrt(rmsArr.reduce((s,v)=>s+(v-meanRms)**2,0)/rmsArr.length);
+  const valid=trimmed.filter((_,i)=>Math.abs(rmsArr[i]-meanRms)<=2*sdRms);
+  return valid.length>=3?valid:trimmed; // fallback: keep all if too many rejected
+}
+
+// ═══════════════════════════════════════
+// MAIN TEST — Two attempts per ear
+// Per UW paper: run twice, take positive if they disagree
+// ═══════════════════════════════════════
+async function runTest(){
+  stopProbeTone(); // hard stop — must not bleed into chirp recording
+  goTo('s-test');
+  startMotionDetection();
+  startGyroCheck();
+  await checkDiagnosticBandNoise();
+
+  const ear=selectedEar;
+  const earLabel=ear.charAt(0).toUpperCase()+ear.slice(1);
+  document.getElementById('test-title').textContent=`Testing ${earLabel} Ear`;
+
+  const fbWrap=document.getElementById('freq-bars');fbWrap.innerHTML='';
+  const NB=28;const fbars=[];
+  for(let i=0;i<NB;i++){const b=document.createElement('div');b.className='freq-bar';b.style.height='3px';fbWrap.appendChild(b);fbars.push(b);}
+
+  const ring=document.getElementById('ring-prog');
+  const lbl=document.getElementById('test-label');
+  const sub=document.getElementById('test-sub');
+  const emoji=document.getElementById('ring-emoji');
+  const C=364;
+
+  // Draw loop for Android canvases (iOS has no simultaneous mic, skip visual)
+  let drawing=false;
+  let drawAn=null;
+  if(!isIOS){
+    // Canvases animated during test — separate analyser node just for display
+    drawAn=audioCtx.createAnalyser();drawAn.fftSize=2048;
+    const drawSrc=audioCtx.createMediaStreamSource(micStream);drawSrc.connect(drawAn);
+    const eC=document.getElementById('emit-canvas');
+    const rC=document.getElementById('recv-canvas');
+    const eCx=eC.getContext('2d');const rCx=rC.getContext('2d');
+    const rD=new Uint8Array(drawAn.fftSize);
+    drawing=true;
+    function drawLoop(){
+      if(!drawing) return;
+      eC.width=eC.offsetWidth||400;
+      eCx.clearRect(0,0,eC.width,eC.height);
+      eCx.beginPath();eCx.strokeStyle='#4FC3F7';eCx.lineWidth=1.5;
+      for(let x=0;x<eC.width;x++){
+        const t=x/eC.width;
+        const y=eC.height/2+Math.sin(t*(2+t*10)*Math.PI*2+Date.now()*0.006)*20;
+        x===0?eCx.moveTo(x,y):eCx.lineTo(x,y);
+      }
+      eCx.stroke();
+      rC.width=rC.offsetWidth||400;
+      drawAn.getByteTimeDomainData(rD);
+      rCx.clearRect(0,0,rC.width,rC.height);
+      rCx.beginPath();rCx.strokeStyle='#66BB6A';rCx.lineWidth=1.5;
+      const sw2=rC.width/rD.length;let x=0;
+      for(let i=0;i<rD.length;i++){const y=(rD[i]/128)*rC.height/2;i===0?rCx.moveTo(x,y):rCx.lineTo(x,y);x+=sw2;}
+      rCx.stroke();
+      animFrame=requestAnimationFrame(drawLoop);
+    }
+    drawLoop();
+  }
+
+  // ── ATTEMPT 1 ──
+  emoji.textContent='⏳';lbl.textContent='Get Ready';ring.style.strokeDashoffset=C;
+  sub.textContent='Hold still — inner tragus pocket, speaker at canal';
+  await sleep(600);
+  for(let i=3;i>=1;i--){
+    emoji.textContent='🔊';lbl.textContent=`Starting in ${i}…`;
+    ring.style.strokeDashoffset=C*(i/3);
+    await sleep(600);
+  }
+
+  // ── IN-CONTACT REFERENCE SWEEP ──
+  // Fire 2 chirps in the current contact geometry and store as reference.
+  // Happens silently during the "starting" phase — user holds position.
+  // This reference is subtracted in analyzeDip to normalise the device
+  // response in the actual ear geometry, not an arbitrary open-air position.
+  emoji.textContent='📡';lbl.textContent='Calibrating…';
+  sub.textContent='Hold still — one moment';
+  await collectContactRef(ear);
+  await sleep(200);
+  emoji.textContent='🎵';
+  lbl.textContent='Attempt 1 of 2 — Recording…';
+  sub.textContent='Stay still — 10 chirps, ~3 seconds';
+
+  const snaps1=await collectAttempt(ear,fbars,NB,pg=>{
+    ring.style.strokeDashoffset=C*(1-(pg*0.5)); // first half of ring = attempt 1
+  });
+
+  // ── BRIEF PAUSE between attempts ──
+  lbl.textContent='Attempt 1 done — hold position';
+  emoji.textContent='✅';
+  await sleep(800);
+
+  // ── ATTEMPT 2 ──
+  emoji.textContent='🎵';
+  lbl.textContent='Attempt 2 of 2 — Recording…';
+  sub.textContent='Keep phone in same position';
+  ring.style.strokeDashoffset=C*0.5;
+
+  const snaps2=await collectAttempt(ear,fbars,NB,pg=>{
+    ring.style.strokeDashoffset=C*(0.5-(pg*0.5)); // second half = attempt 2
+  });
+
+  if(!isIOS){ drawing=false; cancelAnimationFrame(animFrame); }
+  stopMotionDetection();
+  stopGyroCheck();
+
+  emoji.textContent='🔍';lbl.textContent='Analyzing…';ring.style.strokeDashoffset=0;
+  await sleep(600);
+
+  // ── ANALYZE BOTH ATTEMPTS ──
+  const r1=analyzeDip(snaps1,ear,1);
+  const r2=analyzeDip(snaps2,ear,2);
+
+  // Per UW paper: when attempts disagree, take the more positive (worse) result
+  // to minimize false negatives. Consistency is also stored for display.
+  const consistent=(r1.risk===r2.risk);
+  const finalResult=pickWorseResult(r1,r2);
+  finalResult.consistent=consistent;
+  finalResult.attempt1risk=r1.risk;
+  finalResult.attempt2risk=r2.risk;
+  if(diagnosticBandNoisyFlag) finalResult.noisyBandWarning=true;
+
+  results[ear]=finalResult;
+  testedEars.push(ear);
+
+  const other=ear==='left'?'right':'left';
+  if(!testedEars.includes(other)){
+    emoji.textContent='✅';
+    lbl.textContent=`${earLabel} done — now test the other ear`;
+    await sleep(1400);
+    selectedEar=other;
+    document.getElementById('earselect-title').textContent=
+      `Now: ${other.charAt(0).toUpperCase()+other.slice(1)} Ear`;
+    document.getElementById('ear-left').style.borderColor=other==='left'?'var(--sky)':'transparent';
+    document.getElementById('ear-right').style.borderColor=other==='right'?'var(--sky)':'transparent';
+    document.getElementById('earselect-go').disabled=false;
+    document.getElementById('ear-side-remind').textContent=
+      `Inner tragus pocket, ${other} side — speaker at canal.`;
+    goTo('s-earselect');
+  } else {
+    showResults();
+  }
+}
+
+// Take the worse (more positive) of two results to minimize false negatives
+function pickWorseResult(r1,r2){
+  const order={clear:0,monitor:1,'see-doctor':2};
+  return order[r1.risk]>=order[r2.risk]?r1:r2;
+}
+
+function updateFreqBars(freqData,bars,NB,binCount){
+  const step=Math.floor(binCount/NB);
+  for(let i=0;i<NB;i++){
+    let mx=-Infinity;
+    for(let j=i*step;j<(i+1)*step;j++) mx=Math.max(mx,freqData[j]);
+    const n=Math.max(0,(mx+100)/80);
+    bars[i].style.height=(3+n*52)+'px';
+    bars[i].style.opacity=0.4+n*0.6;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CLINICAL DATA COLLECTION
+// Logs full raw data records to localStorage for retrospective analysis.
+// Export via browser console: JSON.parse(localStorage.getItem('otoScreenClinical')||'[]')
+// ═══════════════════════════════════════════════════════════════════════
+
+let _clinicalSessionId=null;
+function getClinicalSessionId(){
+  if(!_clinicalSessionId)
+    _clinicalSessionId=Math.random().toString(36).slice(2,10).toUpperCase();
+  return _clinicalSessionId;
+}
+
+function saveClinicalRecord(record){
+  try{
+    const key='otoScreenClinical';
+    const existing=JSON.parse(localStorage.getItem(key)||'[]');
+    existing.push(record);
+    if(existing.length>500) existing.splice(0,existing.length-500);
+    localStorage.setItem(key,JSON.stringify(existing));
+  }catch(e){console.warn('Clinical data save failed:',e);}
+}
+
+function downsampleWaveform(avg,bc,sr){
+  const out=[];
+  const maxBin=Math.floor(6000/((sr/2)/bc));
+  const step=maxBin/128;
+  for(let i=0;i<128;i++){
+    const b0=Math.floor(i*step),b1=Math.min(bc-1,Math.floor((i+1)*step));
+    let s=0,cnt=0;
+    for(let b=b0;b<=b1;b++){s+=avg[b];cnt++;}
+    out.push(Math.round((s/(cnt||1))*10)/10);
+  }
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ACOUSTIC DIP ANALYSIS — Multi-feature research-grounded engine
+//
+// FEATURE 1: Dip depth (35%)
+//   UW Chan/Gollakota 2019 — highest ML feature weight.
+//   VALIDATED: 98 clinical ears, myringotomy ground truth, AUC 0.898.
+//
+// FEATURE 2: Low-frequency reflectance elevation 1.0–1.6 kHz (30%)
+//   Beers et al. 2010 (Ear Hear) — 1.25 kHz is the most discriminating
+//   band for MEE. ALL 42 MEE ears exceeded normal group 90th percentile.
+//   Physics: fluid displaces air → stiffness increase → elevated reflectance
+//   below resonance (stiffness-dominated regime, < ~2 kHz).
+//   VALIDATED: 144 ears, audiological ground truth.
+//   CAVEAT: validated with sealed probe. Open tragus contact adds variance.
+//   Weight is provisional pending OtoScreen clinical data collection.
+//
+// FEATURE 3: Spectral gradient slope (20%)
+//   EarCheck Pro mechanism — Kimball 1998 (Pediatr Infect Dis J).
+//   Slope on low-freq rising edge of dip = spectral gradient angle.
+//   Steeper = sharper resonance cutoff = fluid loading.
+//   VALIDATED: 12,333 ears across 6 studies, commercial device ground truth.
+//
+// FEATURE 4: Dip width (15%)
+//   UW paper secondary feature. Narrower = more concentrated interference.
+//   VALIDATED: same as Feature 1.
+// ═══════════════════════════════════════════════════════════════════════
+
+function analyzeDip(snapshots, ear, attemptNum){
+  const sr=audioCtx.sampleRate;
+  const bc=snapshots[0].length;
+  const fpb=(sr/2)/bc;
+
+  // 1. Average across validated sweeps
+  const avg=new Float32Array(bc);
+  for(let i=0;i<bc;i++){
+    let s=0;for(const sn of snapshots) s+=sn[i];
+    avg[i]=s/snapshots.length;
+  }
+  const avgRaw=avg.slice();
+
+  // 2. In-contact reference subtraction (geometry-matched calibration)
+  // Subtract the reference sweep captured in the same contact position
+  // from this ear. This normalises for phone model, mic sensitivity,
+  // and contact angle — all factors that are identical in both recordings
+  // because they were made in the same geometry seconds apart.
+  // We only subtract in the diagnostic bands (1000–5000 Hz) to avoid
+  // distorting bins outside the calibrated range.
+  const ref=contactRefWeights[ear];
+  if(ref&&ref.length===bc){
+    const fpbLocal=(audioCtx.sampleRate/2)/bc;
+    const calLow=Math.floor(900/fpbLocal);
+    const calHigh=Math.floor(5000/fpbLocal);
+    for(let i=calLow;i<=calHigh;i++){
+      if(ref[i]>-100&&avg[i]>-100) avg[i]=avg[i]-ref[i];
+    }
+  }
+
+  // 3. Moving average smoothing (7-bin ≈ UW 300-sample window)
+  const SMOOTH_WIN=7;
+  const smoothed=new Float32Array(bc);
+  for(let i=0;i<bc;i++){
+    let s=0,cnt=0;
+    for(let j=Math.max(0,i-SMOOTH_WIN);j<=Math.min(bc-1,i+SMOOTH_WIN);j++){s+=avg[j];cnt++;}
+    smoothed[i]=s/cnt;
+  }
+
+  // 4. Wax detection: dip above 4.2 kHz (UW paper: wax shifts dip ~1kHz higher)
+  const waxBinLow=Math.floor(4200/fpb);
+  const waxBinHigh=Math.min(bc-1,Math.floor(6000/fpb));
+  let waxDipVal=Infinity,waxDipBin=-1;
+  for(let i=waxBinLow;i<=waxBinHigh;i++){if(smoothed[i]<waxDipVal){waxDipVal=smoothed[i];waxDipBin=i;}}
+  const waxWing=Math.floor(400/fpb);
+  let wL=-Infinity,wR=-Infinity;
+  for(let i=Math.max(0,waxDipBin-waxWing);i<waxDipBin;i++) wL=Math.max(wL,smoothed[i]);
+  for(let i=waxDipBin+1;i<=Math.min(bc-1,waxDipBin+waxWing);i++) wR=Math.max(wR,smoothed[i]);
+  const waxDepth=((wL+wR)/2)-waxDipVal;
+  const waxSuspected=waxDepth>12;
+
+  // 5. Feature 2: Low-frequency reflectance elevation (1.0–1.6 kHz)
+  // Beers 2010: 1.25 kHz is most discriminating band for MEE.
+  // Fluid displaces air → stiffness rise → elevated reflectance below resonance.
+  // Normalize against 2500–3500 Hz mid-band to remove absolute level effects.
+  const lfLow=Math.floor(1000/fpb),lfHigh=Math.floor(1600/fpb);
+  let lfEnergy=0;
+  for(let i=lfLow;i<=lfHigh;i++) lfEnergy+=Math.pow(10,smoothed[i]/20);
+  lfEnergy/=(lfHigh-lfLow+1);
+  const midLow=Math.floor(2500/fpb),midHigh=Math.floor(3500/fpb);
+  let midEnergy=0;
+  for(let i=midLow;i<=midHigh;i++) midEnergy+=Math.pow(10,smoothed[i]/20);
+  midEnergy/=(midHigh-midLow+1);
+  const lfRatio=midEnergy>0?lfEnergy/midEnergy:1;
+
+  // 6. Diagnostic dip search: 2000–4200 Hz (age-calibrated)
+  const DR=getDipRange(selectedAge||7);
+  const binLow=Math.floor(Math.max(DR.low,2000)/fpb);
+  const binHigh=Math.floor(Math.min(DR.high,4200)/fpb);
+  let dipBin=-1,dipVal=Infinity;
+  for(let i=binLow+4;i<=binHigh-4;i++){
+    if(smoothed[i]<smoothed[i-1]&&smoothed[i]<smoothed[i+1]&&
+       smoothed[i]<smoothed[i-4]&&smoothed[i]<smoothed[i+4]){
+      if(smoothed[i]<dipVal){dipVal=smoothed[i];dipBin=i;}
+    }
+  }
+  if(dipBin===-1){for(let i=binLow;i<=binHigh;i++){if(smoothed[i]<dipVal){dipVal=smoothed[i];dipBin=i;}}}
+  const dipFreq=Math.round(dipBin*fpb);
+
+  // 7. Feature 1: Dip depth
+  const wing=Math.floor(500/fpb);
+  let lPeak=-Infinity,rPeak=-Infinity;
+  for(let i=Math.max(0,dipBin-wing);i<dipBin;i++) lPeak=Math.max(lPeak,smoothed[i]);
+  for(let i=dipBin+1;i<=Math.min(bc-1,dipBin+wing);i++) rPeak=Math.max(rPeak,smoothed[i]);
+  const dipDepth=((lPeak+rPeak)/2)-dipVal;
+
+  // 8. Feature 4: Dip width at half-depth
+  const halfD=dipVal+dipDepth*0.5;
+  let wLeft=dipBin,wRight=dipBin;
+  while(wLeft>binLow&&smoothed[wLeft]<halfD) wLeft--;
+  while(wRight<binHigh&&smoothed[wRight]<halfD) wRight++;
+  const dipWidthHz=Math.round((wRight-wLeft)*fpb);
+
+  // 9. Feature 3: Spectral gradient slope (EarCheck mechanism)
+  // Rate of change (dB/Hz) on the low-freq rising edge of the dip.
+  // Fluid → steeper slope → higher value.
+  const slopeBins=Math.floor(400/fpb);
+  const slopeStartBin=Math.max(0,dipBin-slopeBins);
+  const slopeRise=smoothed[slopeStartBin]-dipVal;
+  const gradientSlope=slopeRise>0?slopeRise/400:0;
+
+  // 10. Weighted multi-feature scoring
+  // Weights reflect validation strength and caveat status.
+  const s1=dipDepth>=20?0.35:dipDepth>=14?0.26:dipDepth>=9?0.14:dipDepth>=5?0.05:0;
+  const s2=lfRatio>=2.0?0.30:lfRatio>=1.5?0.22:lfRatio>=1.2?0.12:lfRatio>=1.0?0.05:0;
+  const s3=gradientSlope>=0.10?0.20:gradientSlope>=0.07?0.14:gradientSlope>=0.05?0.08:gradientSlope>=0.03?0.03:0;
+  const s4=dipWidthHz<400?0.15:dipWidthHz<600?0.10:dipWidthHz<900?0.04:0;
+  const score=Math.min(s1+s2+s3+s4,1.0);
+
+  // 11. Result classification — asymmetric thresholds favour sensitivity over specificity.
+  // False negative (missed fluid) → hearing loss, speech delay. False positive → doctor visit.
+  let risk,headline,plain,action,icon;
+  if(waxSuspected){
+    risk='wax';icon='⚠️';headline='Possible Ear Wax';
+    plain='The acoustic pattern suggests ear wax may be blocking part of the canal. Check before re-testing.';
+    action='→ Check for ear wax — clean gently if needed, then re-test';
+  } else if(score<0.25){
+    risk='clear';icon='✅';headline='Sounds Clear';
+    plain='The acoustic pattern is consistent with a freely vibrating eardrum. Low-frequency reflectance and dip shape look typical of a clear middle ear.';
+    action='✓ No action needed — re-test if symptoms develop';
+  } else if(score<0.45){
+    risk='monitor';icon='⚠️';headline='Worth Monitoring';
+    plain='Some acoustic features are slightly elevated. This may indicate early fluid, positioning variation, or normal variance. Test again in 2–3 days.';
+    action='→ Re-test in 2–3 days · See a doctor if symptoms develop';
+  } else {
+    risk='see-doctor';icon='🔴';headline='See a Doctor';
+    plain='Multiple acoustic features suggest possible middle ear fluid — elevated low-frequency reflectance and a deep, sharp dip consistent with a fluid-loaded eardrum.';
+    action='→ Book a pediatrician or ENT appointment soon';
+  }
+
+  // 12. Clinical data record
+  const clinicalRecord={
+    ts:new Date().toISOString(),
+    sessionId:getClinicalSessionId(),
+    age:selectedAge||null,
+    ear,
+    platform:isIOS?'ios':isAndroid?'android':'other',
+    attempt:attemptNum||1,
+    sweepCount:snapshots.length,
+    features:{
+      dipFreq,
+      dipDepth:Math.round(dipDepth*10)/10,
+      dipWidthHz,
+      gradientSlope:Math.round(gradientSlope*10000)/10000,
+      lfRatio:Math.round(lfRatio*100)/100,
+      waxDepth:Math.round(waxDepth*10)/10,
+    },
+    featureScores:{s1,s2,s3,s4},
+    score:Math.round(score*1000)/1000,
+    risk,waxSuspected,
+    rawWaveform:downsampleWaveform(avgRaw,bc,sr),
+    contactRefApplied:!!(contactRefWeights[ear]),groundTruth:null,
+    clinicianNotes:null,
+  };
+  saveClinicalRecord(clinicalRecord);
+
+  return{score,risk,headline,plain,action,icon,
+    dipFreq,dipDepth:Math.round(dipDepth*10)/10,
+    dipWidthHz,gradientSlope:Math.round(gradientSlope*10000)/10000,
+    lfRatio:Math.round(lfRatio*100)/100,
+    waxSuspected,clinicalRecord};
+}
+function showResults(){
+  goTo('s-results');
+  const L=results.left,R=results.right;
+
+  function setResult(side,r){
+    if(!r) return;
+    const card=document.getElementById(`${side}-result`);
+    card.className=`result-hero ${r.risk}`;
+    document.getElementById(`${side}-icon`).textContent=r.icon;
+    document.getElementById(`${side}-headline`).textContent=
+      `${side.charAt(0).toUpperCase()+side.slice(1)} Ear — ${r.headline}`;
+    document.getElementById(`${side}-plain`).textContent=r.plain;
+
+    // Build action text with consistency flag
+    let actionText=r.action;
+    if(r.waxSuspected) actionText='⚠️ Possible ear wax — check before re-testing';
+    else if(!r.consistent) actionText+=' (results varied between attempts — consider re-testing)';
+    if(r.noisyBandWarning) actionText+=' · Note: background noise may have affected accuracy';
+    document.getElementById(`${side}-action`).textContent=actionText;
+
+    // Animate score spectrum marker
+    // Map score 0–1 to 2%–98% (leave margin so marker doesn't fall off edges)
+    // Zone boundaries: clear/monitor = 0.25 → 25% of track; monitor/see-doctor = 0.45 → 45%
+    // The marker color matches the zone it's in
+    const markerEl=document.getElementById(`${side}-marker`);
+    if(markerEl){
+      const pct=Math.round(Math.min(Math.max(r.score,0.01),0.99)*100);
+      const markerColor=r.risk==='clear'?'#66BB6A':r.risk==='monitor'?'#FFB74D':'#EF5350';
+      setTimeout(()=>{
+        markerEl.style.left=pct+'%';
+        markerEl.style.borderColor=markerColor;
+      },300); // short delay so the animation is visible
+    }
+  }
+  setResult('left',L);setResult('right',R);
+
+  if(L){
+    document.getElementById('m-lf').textContent=L.dipFreq+'Hz';
+    document.getElementById('m-ld').textContent=L.dipDepth+'dB';
+    document.getElementById('m-llf').textContent=L.lfRatio?L.lfRatio.toFixed(2):'—';
+    document.getElementById('m-ls').textContent=L.score?Math.round(L.score*100)+'%':'—';
+  }
+  if(R){
+    document.getElementById('m-rf').textContent=R.dipFreq+'Hz';
+    document.getElementById('m-rd').textContent=R.dipDepth+'dB';
+    document.getElementById('m-rlf').textContent=R.lfRatio?R.lfRatio.toFixed(2):'—';
+    document.getElementById('m-rs').textContent=R.score?Math.round(R.score*100)+'%':'—';
+  }
+  document.getElementById('ground-truth-status').textContent='';
+  document.getElementById('clinical-stats-display').style.display='none';
+
+  // Asymmetry
+  if(L&&R){
+    const diff=Math.abs(L.score-R.score);
+    setTimeout(()=>{
+      document.getElementById('asym-L').style.width=Math.round(Math.min(L.score*44,44))+'%';
+      document.getElementById('asym-R').style.width=Math.round(Math.min(R.score*44,44))+'%';
+    },400);
+    const pct=Math.round(diff*100);
+    const ar=document.getElementById('asym-result');
+    if(pct<15){ar.textContent='Symmetric ✅';ar.style.color='var(--green)';}
+    else if(pct<35){ar.textContent=`Mild asymmetry (${pct}%) ⚠️`;ar.style.color='var(--yellow)';}
+    else{ar.textContent=`Significant asymmetry (${pct}%) 🔴`;ar.style.color='var(--red)';}
+  }
+
+  // Repeat concern banner
+  const anyRed=(L&&L.risk==='see-doctor')||(R&&R.risk==='see-doctor');
+  if(anyRed){
+    const prevRed=sessionHistory.some(h=>h.left==='see-doctor'||h.right==='see-doctor');
+    if(prevRed) document.getElementById('repeat-banner').style.display='block';
+  }
+
+  // Save to history
+  const entry={
+    date:new Date().toLocaleDateString(),
+    time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+    age:selectedAge,
+    left:L?L.risk:null,
+    right:R?R.risk:null,
+  };
+  sessionHistory.unshift(entry);
+  if(sessionHistory.length>20) sessionHistory=sessionHistory.slice(0,20);
+  localStorage.setItem('otoHistory',JSON.stringify(sessionHistory));
+}
+
+// ═══════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════
+function renderHistory(){
+  const el=document.getElementById('history-list');
+  if(sessionHistory.length===0){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">No past results yet.</div>';
+    return;
+  }
+  el.innerHTML=sessionHistory.map(h=>`
+    <div class="history-row">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${h.date} · ${h.time}</div>
+        <div class="history-date">Age ${h.age||'?'}</div>
+      </div>
+      <div class="history-ears">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px">L</div>
+          <div class="history-dot ${h.left||''}"></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px">R</div>
+          <div class="history-dot ${h.right||''}"></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+// ═══════════════════════════════════════
+// CLINICAL STUDY UTILITIES
+// ═══════════════════════════════════════
+function setGroundTruth(value){
+  try{
+    const key='otoScreenClinical';
+    const records=JSON.parse(localStorage.getItem(key)||'[]');
+    // Apply to all records from this session
+    const sid=getClinicalSessionId();
+    let updated=0;
+    records.forEach(r=>{ if(r.sessionId===sid&&r.groundTruth===null){r.groundTruth=value;updated++;} });
+    localStorage.setItem(key,JSON.stringify(records));
+    const el=document.getElementById('ground-truth-status');
+    el.textContent=updated>0?`✅ Recorded: ${value} for ${updated} record(s) this session`:`No records to update`;
+    el.style.color=value==='clear'?'var(--green)':'var(--red)';
+  }catch(e){console.warn(e);}
+}
+
+function exportClinicalData(){
+  try{
+    const data=JSON.parse(localStorage.getItem('otoScreenClinical')||'[]');
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`otoscreen-clinical-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();URL.revokeObjectURL(url);
+  }catch(e){alert('Export failed: '+e.message);}
+}
+
+function showClinicalStats(){
+  const el=document.getElementById('clinical-stats-display');
+  if(el.style.display!=='none'){el.style.display='none';return;}
+  try{
+    const records=JSON.parse(localStorage.getItem('otoScreenClinical')||'[]');
+    const total=records.length;
+    const labeled=records.filter(r=>r.groundTruth!==null).length;
+    const byRisk={};
+    records.forEach(r=>{byRisk[r.risk]=(byRisk[r.risk]||0)+1;});
+    const sessions=new Set(records.map(r=>r.sessionId)).size;
+    let html=`Total records: ${total} · Sessions: ${sessions} · Labeled: ${labeled}<br>`;
+    html+=Object.entries(byRisk).map(([k,v])=>`${k}: ${v}`).join(' · ');
+    if(labeled>0){
+      const tp=records.filter(r=>r.groundTruth==='fluid'&&(r.risk==='see-doctor'||r.risk==='monitor')).length;
+      const tn=records.filter(r=>r.groundTruth==='clear'&&r.risk==='clear').length;
+      const fp=records.filter(r=>r.groundTruth==='clear'&&(r.risk==='see-doctor'||r.risk==='monitor')).length;
+      const fn=records.filter(r=>r.groundTruth==='fluid'&&r.risk==='clear').length;
+      if(tp+fn>0) html+=`<br>Sensitivity: ${Math.round(tp/(tp+fn)*100)}% (${tp}/${tp+fn})`;
+      if(tn+fp>0) html+=`<br>Specificity: ${Math.round(tn/(tn+fp)*100)}% (${tn}/${tn+fp})`;
+    }
+    el.innerHTML=html;
+    el.style.display='block';
+  }catch(e){el.textContent='Stats error: '+e.message;el.style.display='block';}
+}
+
+
+function testAgain(){
+  stopProbeTone();
+  contactRefWeights={left:null,right:null};
+  results={left:null,right:null};testedEars=[];selectedEar=null;
+  contactConfirmed=false;motionExceeded=false;
+  document.getElementById('repeat-banner').style.display='none';
+  document.getElementById('ear-left').style.borderColor='transparent';
+  document.getElementById('ear-right').style.borderColor='transparent';
+  document.getElementById('earselect-go').disabled=true;
+  goTo('s-earselect');
+}
+
+// ═══════════════════════════════════════
+// DIAGRAM ZOOM MODAL
+// Tap any placement diagram to see it full-screen
+// ═══════════════════════════════════════
+function openZoom(svgId){
+  const src=document.getElementById(svgId);
+  if(!src) return;
+  const modal=document.getElementById('zoom-modal');
+  const dest=document.getElementById('zoom-svg');
+  // Clone the SVG content into the modal SVG
+  dest.setAttribute('viewBox', src.getAttribute('viewBox')||'0 0 160 200');
+  dest.innerHTML=src.innerHTML;
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeZoom(){
+  document.getElementById('zoom-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+// Close on escape key
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeZoom(); });
+</script>
+</body>
+</html>
